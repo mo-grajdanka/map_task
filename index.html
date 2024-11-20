@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Карта с Участками и Объектами</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=0466250c-97ea-4e27-8c2c-cef3a58398a4&lang=ru_RU" type="text/javascript"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h1>Настройки карты</h1>
+            <!-- Настройки карты -->
+            <div id="zone-container">
+                <select id="zone-select" class="zone-button">
+                    <option value="">Выберите зону:</option>
+                    <option value="all">Все</option>
+                    <option value="47">47</option>
+                    <option value="48">48</option>
+                    <option value="46">46</option>
+                    <option value="45">45</option>
+                </select>
+            </div>
+            
+
+
+            <!-- Кнопки управления -->
+            <div id="controls-buttons">
+                <button id="form-button" class="button">Форма</button>
+                <button id="open-photo-modal" class="button">Открыть камеру</button>
+                <button id="toggle-button" class="button">Скрыть настройки</button>
+            </div>
+        </div>
+
+        <!-- Модальное окно для камеры -->
+ <div id="photo-modal" class="modal hidden">
+    <div class="modal-content">
+        <span id="close-modal" class="close">&times;</span>
+        <video id="camera" autoplay></video>
+        <canvas id="snapshot" class="hidden"></canvas>
+        
+        <!-- Кнопки управления -->
+        <div class="photo-buttons">
+            <button id="take-photo" class="button">Сделать фото</button>
+            <button id="save-photo" class="button hidden">Сохранить фото</button>
+            <button id="retake-photo" class="button hidden">Переснять фото</button>
+        </div>
+    </div>
+</div>
+
+<!-- Информирование после сохранения -->
+<div id="photo-status" class="hidden">
+    Фото сохранено! Вы можете прикрепить его к форме.
+</div>
+
+
+        <!-- Модальное окно для формы -->
+        <div id="form-popup" class="form-popup hidden">
+            <div class="form-popup-content">
+                <span class="popup-close" onclick="closeFormPopup()">&times;</span>
+                <div id="formHolder" data-width="720px"></div>
+            </div>
+        </div>
+
+ <!-- Модальное окно для отображения изображения -->
+        <div id="image-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-image-modal" class="close">&times;</span>
+                <img id="modal-image" src="" alt="Изображение" class="popup-image">
+            </div>
+        </div>
+
+        <!-- Модальное окно для слайдера -->
+        <div id="slider-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-slider-modal" class="close">&times;</span>
+                <div id="slider-container">
+                    <button id="prev-slide" class="slider-button">&lt;</button>
+                    <img id="slider-image" src="" alt="Слайдер" class="popup-image">
+                    <button id="next-slide" class="slider-button">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Карта -->
+        <div id="map"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
+</body>
+</html>
