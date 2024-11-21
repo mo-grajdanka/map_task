@@ -419,19 +419,6 @@ const placemark = new ymaps.Placemark([latitude, longitude], {
     preset: cleanIconPreset
 });
 
-// Устанавливаем обработчик события 'balloonopen'
-placemark.events.add('balloonopen', function (e) {
-    const balloon = e.get('balloon');
-    const balloonElement = balloon.getData().geoObject.balloon;
-
-    // Используем setTimeout, чтобы убедиться, что контент загружен
-    setTimeout(() => {
-        const imgElement = balloonElement._$content.querySelector('.balloon-image');
-        if (imgElement) {
-            handleImageLoading(imgElement);
-        }
-    }, 0);
-});
 
 
                 // Добавляем placemark в нужную группу/подгруппу
@@ -865,32 +852,9 @@ function generateImageHTML(imageUrl, title) {
         const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
         const encodedFolderName = encodeURIComponent(folderName);
 
-      
-        const imgId = `img-${sanitizeId(folderName)}`;
-
-       
-        const initialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1.jpg`;
-
-       
-        return `<img id="${imgId}" src="${initialSrc}" alt="${safeTitle}" class="balloon-image" data-folder="${encodedFolderName}" style="width:200px; cursor:pointer; margin-top: 10px;">`;
+        return `<img src="https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1.jpg" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     }
 }
-
-
-function handleThumbnailError(imgElement) {
-    const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
-    let index = parseInt(imgElement.getAttribute('data-index'));
-    index++;
-    if (index >= extensions.length) {
-        // Если изображения не найдены, можно скрыть элемент или установить изображение-заглушку
-        imgElement.style.display = 'none';
-    } else {
-        imgElement.setAttribute('data-index', index);
-        const folder = imgElement.getAttribute('data-folder');
-        imgElement.src = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${folder}/1${extensions[index]}`;
-    }
-}
-
 
 
 
@@ -907,48 +871,23 @@ function openSlider(folderName) {
     const encodedFolderName = encodeURIComponent(cleanedFolderName);
 
     let i = 1;
-    const maxImages = 100; // Максимальное количество изображений
-    const extensions = ['.jpg', '.jpeg', '.png', '.gif']; // Список расширений
 
     function loadImages() {
-        if (i > maxImages) {
+        const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/${i}.jpg`;
+        const img = new Image();
+        img.onload = () => {
+            slideImages.push(imgSrc);
+            i++;
+            loadImages(); 
+        };
+        img.onerror = () => {
             if (slideImages.length > 0) {
                 startSlider();
             } else {
                 alert('Изображения не найдены.');
             }
-            return;
-        }
-
-        let extIndex = 0;
-
-        function tryExtensions() {
-            if (extIndex >= extensions.length) {
-                // Если все расширения перебраны, переходим к следующему номеру изображения
-                i++;
-                loadImages();
-                return;
-            }
-
-            const ext = extensions[extIndex];
-            const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/${i}${ext}`;
-            const img = new Image();
-
-            img.onload = () => {
-                slideImages.push(imgSrc);
-                i++;
-                loadImages(); // Переходим к следующему изображению
-            };
-
-            img.onerror = () => {
-                extIndex++;
-                tryExtensions(); // Пробуем следующее расширение
-            };
-
-            img.src = imgSrc;
-        }
-
-        tryExtensions();
+        };
+        img.src = imgSrc;
     }
 
     function startSlider() {
@@ -984,34 +923,3 @@ function openSlider(folderName) {
     // Начать загрузку изображений
     loadImages();
 }
-
-
-function handleImageLoading(imgElement) {
-    const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
-    let index = 0;
-
-    function tryNextExtension() {
-        if (index >= extensions.length) {
-            
-            imgElement.style.display = 'none';
-            return;
-        }
-
-        const folder = imgElement.getAttribute('data-folder');
-        const src = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${folder}/1${extensions[index]}`;
-        imgElement.src = src;
-
-        imgElement.onerror = function () {
-            index++;
-            tryNextExtension();
-        };
-
-        imgElement.onload = function () {
-         
-        };
-    }
-
-    tryNextExtension();
-}
-
-
