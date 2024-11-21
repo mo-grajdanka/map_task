@@ -97,7 +97,7 @@ takePhotoButton.addEventListener('click', () => {
             (position) => {
                 latitude = position.coords.latitude;
                 longitude = position.coords.longitude;
-                console.log(`Обновлены координаты: Широта=${latitude}, Долгота=${longitude}`);
+                console.log(Обновлены координаты: Широта=${latitude}, Долгота=${longitude});
                 capturePhoto();
             },
             (error) => {
@@ -161,7 +161,7 @@ savePhotoButton.addEventListener('click', () => {
     if (photoBlob) {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(photoBlob);
-        link.download = `photo_${Date.now()}.jpg`;
+        link.download = photo_${Date.now()}.jpg;
         link.click();
         console.log('Фото сохранено.');
 
@@ -197,7 +197,7 @@ savePhotoButton.addEventListener('click', () => {
 // Добавление геоданных в EXIF
 function addGeoDataToPhoto(blob) {
     console.log('Добавление геоданных в EXIF.');
-    console.log(`Координаты для добавления: Широта=${latitude}, Долгота=${longitude}`);
+    console.log(Координаты для добавления: Широта=${latitude}, Долгота=${longitude});
 
     const reader = new FileReader();
     reader.onload = function () {
@@ -255,11 +255,11 @@ function addGeoDataToPhoto(blob) {
 
 
 function fetchSheetNames() {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`;
+    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey};
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Error fetching sheet list: ${response.statusText}`);
+                throw new Error(Error fetching sheet list: ${response.statusText});
             }
             return response.json();
         })
@@ -289,18 +289,18 @@ function flattenCoords(coords) {
 
 
 function fetchZoneData(zoneKey, sheetName, color) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
+    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey};
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText}`);
+                throw new Error(Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText});
             }
             return response.json();
         })
         .then(data => {
             const rows = data.values;
             if (!rows || rows.length < 2) {
-                throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
+                throw new Error(Данные с листа ${sheetName} пусты или недоступны);
             }
 
             const zoneName = zoneKey; // Настоящее название зоны
@@ -353,7 +353,7 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
 
 
                 } catch (e) {
-                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
+                    console.error(Ошибка при парсинге координат полигона для зоны ${zoneName}:, e);
                 }
             }
 
@@ -389,10 +389,10 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
                 const cleanIconPreset = (iconPreset || 'islands#blueDotIcon').replace(/['"]/g, '').trim();
 
                 const firstDateContent = firstDate && firstDateLink
-                    ? `<p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>`
+                    ? <p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>
                     : '';
                 const secondDateContent = secondDate && secondDateLink
-                    ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
+                    ? <p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>
                     : '';
 
 
@@ -400,16 +400,16 @@ const formattedDescription = description ? description.replace(/\n/g, '<br>') : 
 
 const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
-const balloonContent = `
+const balloonContent = 
     <div style="text-align: center;">
         <div class="balloon-title">${title || ''}</div>
-        ${firstDateContent ? `<div>${firstDateContent}</div>` : ''} 
-        ${secondDateContent ? `<div>${secondDateContent}</div>` : ''} 
+        ${firstDateContent ? <div>${firstDateContent}</div> : ''} 
+        ${secondDateContent ? <div>${secondDateContent}</div> : ''} 
         ${imageContent}
         <p>${formattedDescription}</p> 
-        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
+        ${link ? <a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br> : ''} 
     </div>
-`;
+;
 
 
 const placemark = new ymaps.Placemark([latitude, longitude], {
@@ -427,7 +427,7 @@ const placemark = new ymaps.Placemark([latitude, longitude], {
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
-        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
+        .catch(error => console.error(Ошибка при загрузке данных с листа ${sheetName}:, error));
 }
 
 
@@ -483,10 +483,10 @@ function populateZoneDropdown() {
     zoneSelect.innerHTML = ''; // Очищаем текущие опции
 
     // Добавляем опции по умолчанию
-    zoneSelect.innerHTML = `
+    zoneSelect.innerHTML = 
         <option value="">Выберите округ:</option>
         <option value="all">Все</option>
-    `;
+    ;
 
     // Используем ключи из zoneMappings для заполнения списка
     for (let zoneKey in zoneMappings) {
@@ -503,39 +503,39 @@ function generateZoneHTML(zoneKey, zoneDisplayName, color) {
     const controls = document.getElementById('sections-container');
     const zoneDiv = document.createElement('div');
     zoneDiv.className = 'section';
-    zoneDiv.id = `zone-section-${sanitizeId(zoneKey)}`;
-    zoneDiv.innerHTML = `
+    zoneDiv.id = zone-section-${sanitizeId(zoneKey)};
+    zoneDiv.innerHTML = 
         <div class="accordion-header" id="zone-header-${sanitizeId(zoneKey)}">
             <span class="zone-title">${zoneDisplayName}</span>
         </div>
         <div class="accordion-content hidden" id="zone-content-${sanitizeId(zoneKey)}">
         </div>
-    `;
+    ;
     controls.appendChild(zoneDiv);
 }
 
 
 
 function generateGroupHTML(zoneKey, groupName) {
-    const section = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
+    const section = document.getElementById(zone-content-${sanitizeId(zoneKey)});
     if (!section) {
-        console.error(`Не удалось найти секцию зоны: zone-content-${sanitizeId(zoneKey)}`);
+        console.error(Не удалось найти секцию зоны: zone-content-${sanitizeId(zoneKey)});
         return;
     }
     const groupDiv = document.createElement('div');
     groupDiv.className = 'subsection';
-    groupDiv.innerHTML = `
+    groupDiv.innerHTML = 
         <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
             <span class="category-title">${groupName}</span>
         </div>
         <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
         </div>
-    `;
+    ;
     section.appendChild(groupDiv);
 
     // Установка обработчика для аккордеона группы
-    const groupHeader = document.getElementById(`group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
-    const groupContent = document.getElementById(`group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+    const groupHeader = document.getElementById(group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)});
+    const groupContent = document.getElementById(group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)});
     groupHeader.addEventListener('click', () => {
         groupContent.classList.toggle('hidden');
         const isExpanded = !groupContent.classList.contains('hidden');
@@ -560,7 +560,7 @@ function toggleGroupObjects(zoneName, groupName, show) {
 
     // Отображаем или скрываем объекты подгрупп (если подгруппы развернуты)
     for (let subgroupName in group.subgroups) {
-        const subgroupContent = document.getElementById(`objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
+        const subgroupContent = document.getElementById(objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)});
         const isSubgroupExpanded = subgroupContent && !subgroupContent.classList.contains('hidden');
         toggleSubgroupObjects(zoneName, groupName, subgroupName, show && isSubgroupExpanded);
     }
@@ -569,25 +569,25 @@ function toggleGroupObjects(zoneName, groupName, show) {
 
 
 function generateSubgroupHTML(zoneName, groupName, subgroupName) {
-    const groupSection = document.getElementById(`group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}`);
+    const groupSection = document.getElementById(group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)});
     if (!groupSection) {
-        console.error(`Не удалось найти секцию группы: group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}`);
+        console.error(Не удалось найти секцию группы: group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)});
         return;
     }
     const subgroupDiv = document.createElement('div');
     subgroupDiv.className = 'subgroup';
-    subgroupDiv.innerHTML = `
+    subgroupDiv.innerHTML = 
         <div class="accordion-header" id="subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}">
             <span class="subgroup-title">${subgroupName}</span>
         </div>
         <div class="accordion-content hidden" id="objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}">
         </div>
-    `;
+    ;
     groupSection.appendChild(subgroupDiv);
 
     // Установка обработчика для аккордеона подгруппы
-    const subgroupHeader = document.getElementById(`subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
-    const subgroupContent = document.getElementById(`objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
+    const subgroupHeader = document.getElementById(subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)});
+    const subgroupContent = document.getElementById(objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)});
     subgroupHeader.addEventListener('click', () => {
         subgroupContent.classList.toggle('hidden');
         const isExpanded = !subgroupContent.classList.contains('hidden');
@@ -597,20 +597,20 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
 
 function generateObjectHTML(zoneName, groupName, subgroupName, objectId, title) {
     const objectListId = subgroupName
-        ? `objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`
-        : `group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}`;
+        ? objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}
+        : group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)};
 
     const objectList = document.getElementById(objectListId);
     if (!objectList) {
-        console.error(`Не удалось найти список объектов для: ${objectListId}`);
+        console.error(Не удалось найти список объектов для: ${objectListId});
         return;
     }
 
     const objectLabel = document.createElement('label');
-    objectLabel.innerHTML = `
+    objectLabel.innerHTML = 
         <input type="checkbox" id="object${sanitizeId(zoneName)}-${sanitizeId(groupName)}${subgroupName ? '-' + sanitizeId(subgroupName) : ''}-${sanitizeId(objectId)}" checked onchange="toggleObject('${zoneName}', '${groupName}', '${subgroupName}', '${objectId}', this.checked)">
         ${title}
-    `;
+    ;
     objectList.appendChild(objectLabel);
 }
 
@@ -641,8 +641,8 @@ function swapCoordinates(coords) {
 }
 
 function setupAccordion(zoneKey) {
-    const zoneHeader = document.getElementById(`zone-header-${sanitizeId(zoneKey)}`);
-    const zoneContent = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
+    const zoneHeader = document.getElementById(zone-header-${sanitizeId(zoneKey)});
+    const zoneContent = document.getElementById(zone-content-${sanitizeId(zoneKey)});
 
     zoneHeader.addEventListener('click', () => {
         zoneContent.classList.toggle('hidden');
@@ -843,56 +843,17 @@ function generateImageHTML(imageUrl, title) {
         .replace(/>/g, '&gt;');
 
     const cleanedImageUrl = imageUrl.trim();
-    const supportedFormats = ['.jpg', '.jpeg', '.png', '.webp', '.gif']; // Поддерживаемые форматы
 
-    // Если URL начинается с http, сразу возвращаем его
     if (cleanedImageUrl.startsWith('http')) {
         const encodedImageUrl = encodeURI(cleanedImageUrl);
-        return `<img src="${encodedImageUrl}" alt="${safeTitle}" class="balloon-image" onclick="openImageModal('${encodedImageUrl}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
+        return <img src="${encodedImageUrl}" alt="${safeTitle}" class="balloon-image" onclick="openImageModal('${encodedImageUrl}')" style="width:200px; cursor:pointer; margin-top: 10px;">;
+    } else {
+        const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
+        const encodedFolderName = encodeURIComponent(folderName);
+
+        return <img src="https://raw.githubusercontent.com/VladimirMakarof/map_task/main/img/${encodedFolderName}/1.jpg" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">;
     }
-
-    // Для локальной папки ищем изображение с подходящим форматом
-    const folderName = cleanedImageUrl.split('/').pop(); // Имя папки
-    const encodedFolderName = encodeURIComponent(folderName);
-
-    // Генерация HTML с плейсхолдером для загрузки изображения
-    const imgElementId = `img-${Math.random().toString(36).substr(2, 9)}`; // Уникальный ID
-    let html = `
-        <img id="${imgElementId}" src="" alt="${safeTitle}" class="balloon-image-loading" style="width:200px; cursor:pointer; margin-top: 10px;" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')">
-        <script>
-            (function() {
-                const imgElement = document.getElementById('${imgElementId}');
-                const supportedFormats = ${JSON.stringify(supportedFormats)};
-                let found = false;
-
-                // Функция для проверки изображений с разными форматами
-                supportedFormats.forEach((format, index) => {
-                    if (found) return;
-                    const imgSrc = 'https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1' + format;
-                    const testImg = new Image();
-
-                    testImg.onload = () => {
-                        if (!found) {
-                            found = true;
-                            imgElement.src = imgSrc; // Устанавливаем найденное изображение
-                            imgElement.classList.remove('balloon-image-loading');
-                        }
-                    };
-
-                    testImg.onerror = () => {
-                        if (index === supportedFormats.length - 1 && !found) {
-                            imgElement.alt = 'Изображение не найдено'; // Если ничего не найдено
-                        }
-                    };
-
-                    testImg.src = imgSrc;
-                });
-            })();
-        </script>
-    `;
-    return html;
 }
-
 
 
 
@@ -900,76 +861,52 @@ function generateImageHTML(imageUrl, title) {
 function openSlider(folderName) {
     const sliderModal = document.getElementById('slider-modal');
     const sliderImage = document.getElementById('slider-image');
-    const supportedFormats = ['.jpg', '.jpeg', '.png', '.webp', '.gif']; // Поддерживаемые форматы
-    const imageCache = {}; // Локальный кэш для этой функции
+
     let slideImages = [];
     let currentSlideIndex = 0;
 
-    // Очистка имени папки
-    const cleanedFolderName = folderName.split('/').pop();
+    // Оставляем только имя папки
+    const cleanedFolderName = folderName.split('/').pop(); // Берём последнюю часть пути
     const encodedFolderName = encodeURIComponent(cleanedFolderName);
 
-    let i = 1; // Индекс изображения
+    let i = 1;
 
-    // Функция для поиска изображения с кэшированием
-    function findImageCached(folderName, imageName, callback) {
-        const key = `${folderName}/${imageName}`;
-        if (imageCache[key]) {
-            callback(imageCache[key]);
-            return;
-        }
-
-        findImage(folderName, imageName, (imgSrc) => {
-            if (imgSrc) {
-                imageCache[key] = imgSrc; // Кэшируем успешный результат
+    function loadImages() {
+        const imgSrc = https://raw.githubusercontent.com/VladimirMakarof/map_task/main/img/${encodedFolderName}/${i}.jpg;
+        const img = new Image();
+        img.onload = () => {
+            slideImages.push(imgSrc);
+            i++;
+            loadImages(); 
+        };
+        img.onerror = () => {
+            if (slideImages.length > 0) {
+                startSlider();
+            } else {
+                alert('Изображения не найдены.');
             }
-            callback(imgSrc);
-        });
+        };
+        img.src = imgSrc;
     }
 
-    // Рекурсивная загрузка изображений
-    function loadNextImage() {
-        let found = false;
-
-        supportedFormats.forEach((format, index) => {
-            const imageName = `${i}${format}`;
-            findImageCached(encodedFolderName, imageName, (imgSrc) => {
-                if (imgSrc && !found) {
-                    found = true; // Устанавливаем, что изображение найдено
-                    slideImages.push(imgSrc); // Добавляем изображение в массив
-                    i++;
-                    loadNextImage(); // Переходим к следующему изображению
-                } else if (index === supportedFormats.length - 1 && !found) {
-                    if (slideImages.length > 0) {
-                        startSlider(); // Если найдены изображения, запускаем слайдер
-                    } else if (i === 1) {
-                        alert('Изображения не найдены.'); // Если нет изображений
-                    }
-                }
-            });
-        });
-    }
-
-    // Запуск слайдера
     function startSlider() {
         currentSlideIndex = 0;
         updateSlide();
         sliderModal.classList.remove('hidden');
     }
 
-    // Обновление текущего изображения
     function updateSlide() {
         if (slideImages.length > 0) {
             sliderImage.src = slideImages[currentSlideIndex];
+        } else {
+            sliderImage.src = ''; // Если нет изображений
         }
     }
 
-    // Закрытие слайдера
     function closeSlider() {
         sliderModal.classList.add('hidden');
     }
 
-    // Навигация по слайдам
     document.getElementById('next-slide').addEventListener('click', () => {
         currentSlideIndex = (currentSlideIndex + 1) % slideImages.length;
         updateSlide();
@@ -983,16 +920,5 @@ function openSlider(folderName) {
     document.getElementById('close-slider-modal').addEventListener('click', closeSlider);
 
     // Начать загрузку изображений
-    loadNextImage();
-}
-
-// Вспомогательная функция findImage
-function findImage(folderName, imageName, callback) {
-    const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${folderName}/${imageName}`;
-    const img = new Image();
-
-    img.onload = () => callback(imgSrc);
-    img.onerror = () => callback(null);
-
-    img.src = imgSrc;
+    loadImages();
 }
