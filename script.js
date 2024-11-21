@@ -97,7 +97,8 @@ takePhotoButton.addEventListener('click', () => {
             (position) => {
                 latitude = position.coords.latitude;
                 longitude = position.coords.longitude;
-                console.log(Обновлены координаты: Широта=${latitude}, Долгота=${longitude});
+                console.log(`Обновлены координаты: Широта=${latitude}, Долгота=${longitude}`);
+
                 capturePhoto();
             },
             (error) => {
@@ -197,7 +198,8 @@ savePhotoButton.addEventListener('click', () => {
 // Добавление геоданных в EXIF
 function addGeoDataToPhoto(blob) {
     console.log('Добавление геоданных в EXIF.');
-    console.log(Координаты для добавления: Широта=${latitude}, Долгота=${longitude});
+    console.log(`Координаты для добавления: Широта=${latitude}, Долгота=${longitude}`);
+
 
     const reader = new FileReader();
     reader.onload = function () {
@@ -289,18 +291,21 @@ function flattenCoords(coords) {
 
 
 function fetchZoneData(zoneKey, sheetName, color) {
-    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey};
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
+
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText});
+                throw new Error(`Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText}`);
+
             }
             return response.json();
         })
         .then(data => {
             const rows = data.values;
             if (!rows || rows.length < 2) {
-                throw new Error(Данные с листа ${sheetName} пусты или недоступны);
+                throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
+
             }
 
             const zoneName = zoneKey; // Настоящее название зоны
@@ -353,7 +358,8 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
 
 
                 } catch (e) {
-                    console.error(Ошибка при парсинге координат полигона для зоны ${zoneName}:, e);
+                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
+
                 }
             }
 
