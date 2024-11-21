@@ -162,7 +162,7 @@ savePhotoButton.addEventListener('click', () => {
     if (photoBlob) {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(photoBlob);
-        link.download = photo_${Date.now()}.jpg;
+        link.download = `photo_${Date.now()}.jpg`;
         link.click();
         console.log('Фото сохранено.');
 
