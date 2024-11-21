@@ -255,7 +255,8 @@ function addGeoDataToPhoto(blob) {
 
 
 function fetchSheetNames() {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}`;
+    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId + "?key=" + apiKey;
+
     return fetch(url)
         .then(response => {
             if (!response.ok) {
