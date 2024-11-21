@@ -419,6 +419,19 @@ const placemark = new ymaps.Placemark([latitude, longitude], {
     preset: cleanIconPreset
 });
 
+// Устанавливаем обработчик события 'balloonopen'
+placemark.events.add('balloonopen', function (e) {
+    const balloon = e.get('balloon');
+    const balloonElement = balloon.getData().geoObject.balloon;
+
+    // Используем setTimeout, чтобы убедиться, что контент загружен
+    setTimeout(() => {
+        const imgElement = balloonElement._$content.querySelector('.balloon-image');
+        if (imgElement) {
+            handleImageLoading(imgElement);
+        }
+    }, 0);
+});
 
 
                 // Добавляем placemark в нужную группу/подгруппу
@@ -852,19 +865,17 @@ function generateImageHTML(imageUrl, title) {
         const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
         const encodedFolderName = encodeURIComponent(folderName);
 
-        // Список возможных расширений
-        const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
-
-        // Создаём уникальный ID для изображения
+      
         const imgId = `img-${sanitizeId(folderName)}`;
 
-        // Начальное изображение с первым расширением
-        const initialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1${extensions[0]}`;
+       
+        const initialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1.jpg`;
 
-        // Генерируем тег <img> с обработчиком onerror
-        return `<img id="${imgId}" src="${initialSrc}" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" data-folder="${encodedFolderName}" data-index="0" style="width:200px; cursor:pointer; margin-top: 10px;" onerror="handleThumbnailError(this)">`;
+       
+        return `<img id="${imgId}" src="${initialSrc}" alt="${safeTitle}" class="balloon-image" data-folder="${encodedFolderName}" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     }
 }
+
 
 function handleThumbnailError(imgElement) {
     const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
@@ -973,4 +984,34 @@ function openSlider(folderName) {
     // Начать загрузку изображений
     loadImages();
 }
+
+
+function handleImageLoading(imgElement) {
+    const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    let index = 0;
+
+    function tryNextExtension() {
+        if (index >= extensions.length) {
+            // Если изображения не найдены, можно скрыть элемент или установить изображение-заглушку
+            imgElement.style.display = 'none';
+            return;
+        }
+
+        const folder = imgElement.getAttribute('data-folder');
+        const src = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${folder}/1${extensions[index]}`;
+        imgElement.src = src;
+
+        imgElement.onerror = function () {
+            index++;
+            tryNextExtension();
+        };
+
+        imgElement.onload = function () {
+            // Успешно загрузилось, можем добавить дополнительные действия, если нужно
+        };
+    }
+
+    tryNextExtension();
+}
+
 
