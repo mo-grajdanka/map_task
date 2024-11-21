@@ -851,7 +851,7 @@ function generateImageHTML(imageUrl, title) {
         const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
         const encodedFolderName = encodeURIComponent(folderName);
 
-        return `<img src="https://raw.githubusercontent.com/VladimirMakarof/map_task/main/img/${encodedFolderName}/1.jpg" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
+        return `<img src="https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1.jpg" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     }
 }
 
@@ -872,7 +872,7 @@ function openSlider(folderName) {
     let i = 1;
 
     function loadImages() {
-        const imgSrc = `https://raw.githubusercontent.com/VladimirMakarof/map_task/main/img/${encodedFolderName}/${i}.jpg`;
+        const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/${i}.jpg`;
         const img = new Image();
         img.onload = () => {
             slideImages.push(imgSrc);
