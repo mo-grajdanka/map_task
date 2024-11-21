@@ -849,20 +849,34 @@ function generateImageHTML(imageUrl, title) {
         const encodedImageUrl = encodeURI(cleanedImageUrl);
         return `<img src="${encodedImageUrl}" alt="${safeTitle}" class="balloon-image" onclick="openImageModal('${encodedImageUrl}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     } else {
-        const folderName = cleanedImageUrl.split('/').pop(); 
+        const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
         const encodedFolderName = encodeURIComponent(folderName);
 
-        const extensions = ['.jpg', '.jpeg', '.png', '.gif']; 
-        let thumbnailSrc = '';
+        // Список возможных расширений
+        const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
 
-        
-        for (let ext of extensions) {
-            const potentialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1${ext}`;
-            thumbnailSrc = potentialSrc;
-            break; 
-        }
+        // Создаём уникальный ID для изображения
+        const imgId = `img-${sanitizeId(folderName)}`;
 
-        return `<img src="${thumbnailSrc}" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
+        // Начальное изображение с первым расширением
+        const initialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1${extensions[0]}`;
+
+        // Генерируем тег <img> с обработчиком onerror
+        return `<img id="${imgId}" src="${initialSrc}" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" data-folder="${encodedFolderName}" data-index="0" style="width:200px; cursor:pointer; margin-top: 10px;" onerror="handleThumbnailError(this)">`;
+    }
+}
+
+function handleThumbnailError(imgElement) {
+    const extensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    let index = parseInt(imgElement.getAttribute('data-index'));
+    index++;
+    if (index >= extensions.length) {
+        // Если изображения не найдены, можно скрыть элемент или установить изображение-заглушку
+        imgElement.style.display = 'none';
+    } else {
+        imgElement.setAttribute('data-index', index);
+        const folder = imgElement.getAttribute('data-folder');
+        imgElement.src = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${folder}/1${extensions[index]}`;
     }
 }
 
@@ -882,7 +896,7 @@ function openSlider(folderName) {
     const encodedFolderName = encodeURIComponent(cleanedFolderName);
 
     let i = 1;
-    const maxImages = 100; // Максимальное количество изображений, чтобы избежать бесконечного цикла
+    const maxImages = 100; // Максимальное количество изображений
     const extensions = ['.jpg', '.jpeg', '.png', '.gif']; // Список расширений
 
     function loadImages() {
