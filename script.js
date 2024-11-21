@@ -992,7 +992,7 @@ function handleImageLoading(imgElement) {
 
     function tryNextExtension() {
         if (index >= extensions.length) {
-            // Если изображения не найдены, можно скрыть элемент или установить изображение-заглушку
+            
             imgElement.style.display = 'none';
             return;
         }
@@ -1007,7 +1007,7 @@ function handleImageLoading(imgElement) {
         };
 
         imgElement.onload = function () {
-            // Успешно загрузилось, можем добавить дополнительные действия, если нужно
+         
         };
     }
 
