@@ -849,12 +849,23 @@ function generateImageHTML(imageUrl, title) {
         const encodedImageUrl = encodeURI(cleanedImageUrl);
         return `<img src="${encodedImageUrl}" alt="${safeTitle}" class="balloon-image" onclick="openImageModal('${encodedImageUrl}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     } else {
-        const folderName = cleanedImageUrl.split('/').pop(); // Берём только последнюю часть пути
+        const folderName = cleanedImageUrl.split('/').pop(); 
         const encodedFolderName = encodeURIComponent(folderName);
 
-        return `<img src="https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1.jpg" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
+        const extensions = ['.jpg', '.jpeg', '.png', '.gif']; 
+        let thumbnailSrc = '';
+
+        
+        for (let ext of extensions) {
+            const potentialSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/1${ext}`;
+            thumbnailSrc = potentialSrc;
+            break; 
+        }
+
+        return `<img src="${thumbnailSrc}" alt="${safeTitle}" class="balloon-image" onclick="openSlider('${folderName.replace(/'/g, "\\'")}')" style="width:200px; cursor:pointer; margin-top: 10px;">`;
     }
 }
+
 
 
 
@@ -871,23 +882,48 @@ function openSlider(folderName) {
     const encodedFolderName = encodeURIComponent(cleanedFolderName);
 
     let i = 1;
+    const maxImages = 100; // Максимальное количество изображений, чтобы избежать бесконечного цикла
+    const extensions = ['.jpg', '.jpeg', '.png', '.gif']; // Список расширений
 
     function loadImages() {
-        const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/${i}.jpg`;
-        const img = new Image();
-        img.onload = () => {
-            slideImages.push(imgSrc);
-            i++;
-            loadImages(); 
-        };
-        img.onerror = () => {
+        if (i > maxImages) {
             if (slideImages.length > 0) {
                 startSlider();
             } else {
                 alert('Изображения не найдены.');
             }
-        };
-        img.src = imgSrc;
+            return;
+        }
+
+        let extIndex = 0;
+
+        function tryExtensions() {
+            if (extIndex >= extensions.length) {
+                // Если все расширения перебраны, переходим к следующему номеру изображения
+                i++;
+                loadImages();
+                return;
+            }
+
+            const ext = extensions[extIndex];
+            const imgSrc = `https://raw.githubusercontent.com/mo-grajdanka/map_task/main/img/${encodedFolderName}/${i}${ext}`;
+            const img = new Image();
+
+            img.onload = () => {
+                slideImages.push(imgSrc);
+                i++;
+                loadImages(); // Переходим к следующему изображению
+            };
+
+            img.onerror = () => {
+                extIndex++;
+                tryExtensions(); // Пробуем следующее расширение
+            };
+
+            img.src = imgSrc;
+        }
+
+        tryExtensions();
     }
 
     function startSlider() {
@@ -923,3 +959,4 @@ function openSlider(folderName) {
     // Начать загрузку изображений
     loadImages();
 }
+
