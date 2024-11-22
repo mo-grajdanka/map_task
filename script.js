@@ -366,10 +366,14 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
                     firstDate, firstDateLink, secondDate, secondDateLink, description
                 ] = rows[i];
 
+                const group = groupCell ? groupCell.trim() : '';
+                const subgroup = subgroupCell ? subgroupCell.trim() : '';
+
                 const latitude = parseFloat(lat);
                 const longitude = parseFloat(lon);
 
                 if (!zones[zoneKey].groups[group]) {
+                     console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
                     generateGroupHTML(zoneKey, group);
                 }
@@ -377,6 +381,7 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
                 let targetArray;
                 if (subgroup) {
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
+                        console.log(`Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}'`);
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
                         generateSubgroupHTML(zoneKey, group, subgroup);
                     }
@@ -574,12 +579,19 @@ function toggleGroupObjects(zoneName, groupName, show) {
 
 function countGroupObjects(zoneKey, groupName) {
     const group = zones[zoneKey].groups[groupName];
-    let count = group.objects.length || 0;
-    for (let subgroupName in group.subgroups) {
-        count += group.subgroups[subgroupName].length;
+    if (!group) {
+        console.error(`Группа '${groupName}' не найдена в зоне '${zoneKey}'`);
+        return 0;
     }
+    let count = (group.objects && group.objects.length) || 0;
+    for (let subgroupName in group.subgroups) {
+        const subgroupObjects = group.subgroups[subgroupName];
+        count += (subgroupObjects && subgroupObjects.length) || 0;
+    }
+    console.log(`Количество объектов в группе '${groupName}' зоны '${zoneKey}': ${count}`);
     return count;
 }
+
 
 function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     const groupSection = document.getElementById(`group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}`);
