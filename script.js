@@ -572,7 +572,14 @@ function toggleGroupObjects(zoneName, groupName, show) {
     }
 }
 
-
+function countGroupObjects(zoneKey, groupName) {
+    const group = zones[zoneKey].groups[groupName];
+    let count = group.objects.length || 0;
+    for (let subgroupName in group.subgroups) {
+        count += group.subgroups[subgroupName].length;
+    }
+    return count;
+}
 
 function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     const groupSection = document.getElementById(`group-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}`);
@@ -601,14 +608,6 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     });
 }
 
-function countGroupObjects(zoneKey, groupName) {
-    const group = zones[zoneKey].groups[groupName];
-    let count = group.objects.length || 0;
-    for (let subgroupName in group.subgroups) {
-        count += group.subgroups[subgroupName].length;
-    }
-    return count;
-}
 
 
 function generateObjectHTML(zoneName, groupName, subgroupName, objectId, title) {
