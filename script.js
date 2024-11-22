@@ -361,13 +361,13 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
             // Обработка строк с данными объектов
             for (let i = 1; i < rows.length; i++) {
                 const [
-                    id, group, subgroup, title, lat, lon, link, imageUrl, iconPreset,
-                    , // Пропускаем столбец "Координаты полигона"
-                    firstDate, firstDateLink, secondDate, secondDateLink, description
-                ] = rows[i];
+    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
+    , // Пропускаем столбец "Координаты полигона"
+    firstDate, firstDateLink, secondDate, secondDateLink, description
+] = rows[i];
 
-                const group = groupCell ? groupCell.trim() : '';
-                const subgroup = subgroupCell ? subgroupCell.trim() : '';
+const group = groupCell ? groupCell.trim() : '';
+const subgroup = subgroupCell ? subgroupCell.trim() : '';
 
                 const latitude = parseFloat(lat);
                 const longitude = parseFloat(lon);
@@ -375,7 +375,7 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
                 if (!zones[zoneKey].groups[group]) {
                      console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
-                    generateGroupHTML(zoneKey, group);
+                   //  generateGroupHTML(zoneKey, group);
                 }
 
                 let targetArray;
@@ -383,7 +383,7 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
                         console.log(`Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}'`);
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
-                        generateSubgroupHTML(zoneKey, group, subgroup);
+                       //  generateSubgroupHTML(zoneKey, group, subgroup);
                     }
                     targetArray = zones[zoneKey].groups[group].subgroups[subgroup];
                 } else {
