@@ -523,11 +523,14 @@ function generateGroupHTML(zoneKey, groupName) {
         console.error(`Не удалось найти секцию зоны: zone-content-${sanitizeId(zoneKey)}`);
         return;
     }
+
+    const groupObjectsCount = zones[zoneKey].groups[groupName]?.objects?.length || 0;
+
     const groupDiv = document.createElement('div');
     groupDiv.className = 'subsection';
     groupDiv.innerHTML = `
         <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
-            <span class="category-title">${groupName}</span>
+            <span class="category-title">${groupName} (${groupObjectsCount})</span>
         </div>
         <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
         </div>
@@ -543,6 +546,7 @@ function generateGroupHTML(zoneKey, groupName) {
         toggleGroupObjects(zoneKey, groupName, isExpanded);
     });
 }
+
 
 
 function toggleGroupObjects(zoneName, groupName, show) {
