@@ -367,7 +367,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const longitude = parseFloat(lon);
 
                 if (!zones[zoneKey].groups[group]) {
-                    console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
+                 //   console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
                     generateGroupHTML(zoneKey, group);
                 }
