@@ -524,7 +524,7 @@ function generateGroupHTML(zoneKey, groupName) {
         return;
     }
 
-    const groupObjectsCount = zones[zoneKey].groups[groupName]?.objects?.length || 0;
+    const groupObjectsCount = countGroupObjects(zoneKey, groupName);
 
     const groupDiv = document.createElement('div');
     groupDiv.className = 'subsection';
@@ -546,6 +546,7 @@ function generateGroupHTML(zoneKey, groupName) {
         toggleGroupObjects(zoneKey, groupName, isExpanded);
     });
 }
+
 
 
 
