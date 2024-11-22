@@ -601,6 +601,16 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     });
 }
 
+function countGroupObjects(zoneKey, groupName) {
+    const group = zones[zoneKey].groups[groupName];
+    let count = group.objects.length || 0;
+    for (let subgroupName in group.subgroups) {
+        count += group.subgroups[subgroupName].length;
+    }
+    return count;
+}
+
+
 function generateObjectHTML(zoneName, groupName, subgroupName, objectId, title) {
     const objectListId = subgroupName
         ? `objects-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`
