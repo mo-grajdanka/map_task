@@ -304,8 +304,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
             }
 
-            const zoneName = zoneKey; // Настоящее название зоны
-            const zoneDisplayName = sheetName;  // Это название листа из Google Таблицы
+            const zoneName = zoneKey;
+            const zoneDisplayName = sheetName;
 
             if (!zones[zoneKey]) {
                 zones[zoneKey] = { 
@@ -314,15 +314,15 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     groups: {}, 
                     isVisible: false, 
                     polygonVisible: false,
-                    zoneName: zoneName, // Сохраняем "Зона 1"
-                    zoneDisplayName: zoneDisplayName // Сохраняем "Ремонт и реконструкция"
+                    zoneName: zoneName,
+                    zoneDisplayName: zoneDisplayName
                 };
             }
 
-            // Генерация HTML для зоны с использованием zoneKey и zoneName
+            // Генерация HTML для зоны
             generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-            // Парсинг координат полигона (столбец с индексом 9)
+            // Парсинг координат полигона
             const polygonCoordsString = rows[1][9];
             let coordinates;
             if (polygonCoordsString) {
@@ -330,29 +330,25 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     coordinates = JSON.parse(polygonCoordsString);
                     coordinates = swapCoordinates(coordinates);
 
-                    // Создаем полигон
+                    // Создаём полигон
                     zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
                         fillColor: color,
                         strokeColor: '#333',
                         opacity: 0.4,
                     });
 
-                    // Вычисляем центр полигона из координат
-const flatCoords = flattenCoords(coordinates);
-const bounds = ymaps.util.bounds.fromPoints(flatCoords);
-const center = ymaps.util.bounds.getCenter(bounds);
+                    // Создаём метку
+                    const flatCoords = flattenCoords(coordinates);
+                    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
+                    const center = ymaps.util.bounds.getCenter(bounds);
 
-
-                    // Создаем метку с названием зоны
-zones[zoneKey].label = new ymaps.Placemark(center, {
-    iconCaption: zoneName, // Это "Зона 1"
-}, {
-    preset: 'islands#blueCircleDotIconWithCaption',
-    iconCaptionMaxWidth: '200',
-    iconColor: color,
-});
-
-
+                    zones[zoneKey].label = new ymaps.Placemark(center, {
+                        iconCaption: zoneName,
+                    }, {
+                        preset: 'islands#blueCircleDotIconWithCaption',
+                        iconCaptionMaxWidth: '200',
+                        iconColor: color,
+                    });
                 } catch (e) {
                     console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
                 }
@@ -361,21 +357,19 @@ zones[zoneKey].label = new ymaps.Placemark(center, {
             // Обработка строк с данными объектов
             for (let i = 1; i < rows.length; i++) {
                 const [
-    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
-    , // Пропускаем столбец "Координаты полигона"
-    firstDate, firstDateLink, secondDate, secondDateLink, description
-] = rows[i];
+                    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
+                    , firstDate, firstDateLink, secondDate, secondDateLink, description
+                ] = rows[i];
 
-const group = groupCell ? groupCell.trim() : '';
-const subgroup = subgroupCell ? subgroupCell.trim() : '';
-
+                const group = groupCell ? groupCell.trim() : '';
+                const subgroup = subgroupCell ? subgroupCell.trim() : '';
                 const latitude = parseFloat(lat);
                 const longitude = parseFloat(lon);
 
                 if (!zones[zoneKey].groups[group]) {
-                     console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
+                    console.log(`Создание новой группы: '${group}' в зоне '${zoneKey}'`);
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
-                   //  generateGroupHTML(zoneKey, group);
+                    generateGroupHTML(zoneKey, group);
                 }
 
                 let targetArray;
@@ -383,7 +377,7 @@ const subgroup = subgroupCell ? subgroupCell.trim() : '';
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
                         console.log(`Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}'`);
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
-                       //  generateSubgroupHTML(zoneKey, group, subgroup);
+                        generateSubgroupHTML(zoneKey, group, subgroup);
                     }
                     targetArray = zones[zoneKey].groups[group].subgroups[subgroup];
                 } else {
@@ -401,40 +395,39 @@ const subgroup = subgroupCell ? subgroupCell.trim() : '';
                     ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
                     : '';
 
+                const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
+                const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
-const formattedDescription = description ? description.replace(/\n/g, '<br>') : ''; // Проверка на наличие описания
+                const balloonContent = `
+                    <div style="text-align: center;">
+                        <div class="balloon-title">${title || ''}</div>
+                        ${firstDateContent ? `<div>${firstDateContent}</div>` : ''} 
+                        ${secondDateContent ? `<div>${secondDateContent}</div>` : ''} 
+                        ${imageContent}
+                        <p>${formattedDescription}</p> 
+                        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
+                    </div>
+                `;
 
-const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
+                const placemark = new ymaps.Placemark([latitude, longitude], {
+                    balloonContent: balloonContent
+                }, {
+                    preset: cleanIconPreset
+                });
 
-const balloonContent = `
-    <div style="text-align: center;">
-        <div class="balloon-title">${title || ''}</div>
-        ${firstDateContent ? `<div>${firstDateContent}</div>` : ''} 
-        ${secondDateContent ? `<div>${secondDateContent}</div>` : ''} 
-        ${imageContent}
-        <p>${formattedDescription}</p> 
-        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
-    </div>
-`;
-
-
-const placemark = new ymaps.Placemark([latitude, longitude], {
-    balloonContent: balloonContent
-}, {
-    preset: cleanIconPreset
-});
-
-
-
-                // Добавляем placemark в нужную группу/подгруппу
+                // Добавляем объект
                 targetArray.push({ id, placemark });
             }
+
+            // Обновляем количество объектов в группах и подгруппах
+            updateGroupCounts(zoneKey);
 
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
@@ -529,20 +522,18 @@ function generateGroupHTML(zoneKey, groupName) {
         return;
     }
 
-    const groupObjectsCount = countGroupObjects(zoneKey, groupName);
-
     const groupDiv = document.createElement('div');
     groupDiv.className = 'subsection';
     groupDiv.innerHTML = `
         <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
-            <span class="category-title">${groupName} (${groupObjectsCount})</span>
+            <span class="category-title">${groupName} (<span id="group-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">0</span>)</span>
         </div>
         <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
         </div>
     `;
     section.appendChild(groupDiv);
 
-    // Установка обработчика для аккордеона группы
+    // Установка обработчика для аккордеона
     const groupHeader = document.getElementById(`group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
     const groupContent = document.getElementById(`group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
     groupHeader.addEventListener('click', () => {
@@ -551,6 +542,7 @@ function generateGroupHTML(zoneKey, groupName) {
         toggleGroupObjects(zoneKey, groupName, isExpanded);
     });
 }
+
 
 
 
@@ -640,6 +632,38 @@ function generateObjectHTML(zoneName, groupName, subgroupName, objectId, title) 
     `;
     objectList.appendChild(objectLabel);
 }
+
+function updateGroupCounts(zoneKey) {
+    const zone = zones[zoneKey];
+    if (!zone) return;
+
+    for (let groupName in zone.groups) {
+        const group = zone.groups[groupName];
+        let groupCount = (group.objects && group.objects.length) || 0;
+
+        // Обновляем количество в подгруппах
+        for (let subgroupName in group.subgroups) {
+            const subgroupObjects = group.subgroups[subgroupName];
+            const subgroupCount = (subgroupObjects && subgroupObjects.length) || 0;
+
+            // Обновляем количество в заголовке подгруппы
+            const subgroupCountElement = document.getElementById(`subgroup-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
+            if (subgroupCountElement) {
+                subgroupCountElement.textContent = subgroupCount;
+            }
+
+            groupCount += subgroupCount;
+        }
+
+        // Обновляем количество в заголовке группы
+        const groupCountElement = document.getElementById(`group-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+        if (groupCountElement) {
+            groupCountElement.textContent = groupCount;
+        }
+    }
+}
+
+
 
 
 function toggleObject(zoneName, groupName, subgroupName, objectId, isChecked) {
