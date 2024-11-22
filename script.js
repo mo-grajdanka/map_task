@@ -375,7 +375,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 let targetArray;
                 if (subgroup) {
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
-                        console.log(`Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}'`);
+                       // console.log(`Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}'`);
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
                         generateSubgroupHTML(zoneKey, group, subgroup);
                     }
