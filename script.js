@@ -302,83 +302,84 @@ function flattenCoords(coords) {
 
 
 function fetchZoneData(zoneKey, sheetName, color) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
-
+    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey};
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText}`);
+                throw new Error(Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText});
             }
             return response.json();
         })
         .then(data => {
             const rows = data.values;
             if (!rows || rows.length < 2) {
-                throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
-            }
-
-            // Извлечение заголовков из первой строки
-            const headerRow = rows[0];
-            const indices = {
-                id: headerRow.indexOf("ID"),
-                group: headerRow.indexOf("Группа"),
-                subgroup: headerRow.indexOf("Подгруппа"),
-                title: headerRow.indexOf("Название"),
-                latitude: headerRow.indexOf("Широта"),
-                longitude: headerRow.indexOf("Долгота"),
-                link: headerRow.indexOf("Ссылка"),
-                imageUrl: headerRow.indexOf("URL изображения"),
-                iconPreset: headerRow.indexOf("Знак на карте"),
-                polygonCoords: headerRow.indexOf("Координаты полигона"),
-                firstDate: headerRow.indexOf("Первая дата"),
-                firstDateLink: headerRow.indexOf("Первая дата ссылка"),
-                secondDate: headerRow.indexOf("Вторая дата"),
-                secondDateLink: headerRow.indexOf("Вторая дата ссылка"),
-                description: headerRow.indexOf("Описание"),
-            };
-
-            // Проверка обязательных колонок
-            if (indices.group === -1 || indices.title === -1 || indices.latitude === -1 || indices.longitude === -1) {
-                throw new Error(`Некоторые обязательные колонки отсутствуют в листе ${sheetName}`);
+                throw new Error(Данные с листа ${sheetName} пусты или недоступны);
             }
 
             const zoneName = zoneKey;
             const zoneDisplayName = sheetName;
 
             if (!zones[zoneKey]) {
-                zones[zoneKey] = {
-                    polygon: null,
+                zones[zoneKey] = { 
+                    polygon: null, 
                     label: null,
-                    groups: {},
-                    isVisible: false,
+                    groups: {}, 
+                    isVisible: false, 
                     polygonVisible: false,
                     zoneName: zoneName,
-                    zoneDisplayName: zoneDisplayName,
+                    zoneDisplayName: zoneDisplayName
                 };
             }
 
             // Генерация HTML для зоны
             generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-            // Обработка строк с данными объектов
-            rows.slice(1).forEach(row => {
-                const id = row[indices.id] || '';
-                const group = row[indices.group]?.trim() || '';
-                const subgroup = indices.subgroup !== -1 ? row[indices.subgroup]?.trim() || '' : '';
-                const title = row[indices.title] || '';
-                const latitude = parseFloat(row[indices.latitude]);
-                const longitude = parseFloat(row[indices.longitude]);
-                const link = indices.link !== -1 ? row[indices.link] : '';
-                const imageUrl = indices.imageUrl !== -1 ? row[indices.imageUrl] : '';
-                const iconPreset = indices.iconPreset !== -1 ? row[indices.iconPreset] : 'islands#blueDotIcon';
-                const firstDate = indices.firstDate !== -1 ? row[indices.firstDate] : '';
-                const firstDateLink = indices.firstDateLink !== -1 ? row[indices.firstDateLink] : '';
-                const secondDate = indices.secondDate !== -1 ? row[indices.secondDate] : '';
-                const secondDateLink = indices.secondDateLink !== -1 ? row[indices.secondDateLink] : '';
-                const description = indices.description !== -1 ? row[indices.description] : '';
+            // Парсинг координат полигона
+            const polygonCoordsString = rows[1][9];
+            let coordinates;
+            if (polygonCoordsString) {
+                try {
+                    coordinates = JSON.parse(polygonCoordsString);
+                    coordinates = swapCoordinates(coordinates);
 
-                // Проверка и создание групп и подгрупп
+                    // Создаём полигон
+                    zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
+                        fillColor: color,
+                        strokeColor: '#333',
+                        opacity: 0.4,
+                    });
+
+                    // Создаём метку
+                    const flatCoords = flattenCoords(coordinates);
+                    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
+                    const center = ymaps.util.bounds.getCenter(bounds);
+
+                    zones[zoneKey].label = new ymaps.Placemark(center, {
+                        iconCaption: zoneName,
+                    }, {
+                        preset: 'islands#blueCircleDotIconWithCaption',
+                        iconCaptionMaxWidth: '200',
+                        iconColor: color,
+                    });
+                } catch (e) {
+                    console.error(Ошибка при парсинге координат полигона для зоны ${zoneName}:, e);
+                }
+            }
+
+            // Обработка строк с данными объектов
+            for (let i = 1; i < rows.length; i++) {
+                const [
+                    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
+                    , firstDate, firstDateLink, secondDate, secondDateLink, description
+                ] = rows[i];
+
+                const group = groupCell ? groupCell.trim() : '';
+                const subgroup = subgroupCell ? subgroupCell.trim() : '';
+                const latitude = parseFloat(lat);
+                const longitude = parseFloat(lon);
+
                 if (!zones[zoneKey].groups[group]) {
+                 //   console.log(Создание новой группы: '${group}' в зоне '${zoneKey}');
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
                     generateGroupHTML(zoneKey, group);
                 }
@@ -386,6 +387,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 let targetArray;
                 if (subgroup) {
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
+                       // console.log(Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}');
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
                         generateSubgroupHTML(zoneKey, group, subgroup);
                     }
@@ -396,22 +398,38 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
                 generateObjectHTML(zoneKey, group, subgroup, id, title);
 
-                const balloonContent = `
-                    <div style="text-align: center;">
-                        <div class="balloon-title">${title}</div>
-                        ${firstDate && firstDateLink ? `<p><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>` : ''}
-                        ${secondDate && secondDateLink ? `<p><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>` : ''}
-                        ${imageUrl ? generateImageHTML(imageUrl, title) : ''}
-                        <p>${description?.replace(/\n/g, '<br>') || ''}</p>
-                        ${link ? `<a href="${link}" target="_blank">Подробнее</a>` : ''}
-                    </div>
-                `;
+                const cleanIconPreset = (iconPreset || 'islands#blueDotIcon').replace(/['"]/g, '').trim();
 
-                const placemark = new ymaps.Placemark([latitude, longitude], { balloonContent }, { preset: iconPreset });
+                const firstDateContent = firstDate && firstDateLink
+                    ? <p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>
+                    : '';
+                const secondDateContent = secondDate && secondDateLink
+                    ? <p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>
+                    : '';
+
+                const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
+                const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
+
+                const balloonContent = 
+                    <div style="text-align: center;">
+                        <div class="balloon-title">${title || ''}</div>
+                        ${firstDateContent ? <div>${firstDateContent}</div> : ''} 
+                        ${secondDateContent ? <div>${secondDateContent}</div> : ''} 
+                        ${imageContent}
+                        <p>${formattedDescription}</p> 
+                        ${link ? <a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br> : ''} 
+                    </div>
+                ;
+
+                const placemark = new ymaps.Placemark([latitude, longitude], {
+                    balloonContent: balloonContent
+                }, {
+                    preset: cleanIconPreset
+                });
 
                 // Добавляем объект
                 targetArray.push({ id, placemark });
-            });
+            }
 
             // Обновляем количество объектов в группах и подгруппах
             updateGroupCounts(zoneKey);
@@ -419,7 +437,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
-        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
+        .catch(error => console.error(Ошибка при загрузке данных с листа ${sheetName}:, error));
 }
 
 
