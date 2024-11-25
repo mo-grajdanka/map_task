@@ -323,8 +323,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 id: headerRow.indexOf("ID"),
                 group: headerRow.indexOf("Группа"),
                 subgroup: headerRow.indexOf("Подгруппа"),
-                orders: headerRow.indexOf("Ордера"),
-                extraButton: headerRow.indexOf("Доп кнопка"),
                 title: headerRow.indexOf("Название"),
                 latitude: headerRow.indexOf("Широта"),
                 longitude: headerRow.indexOf("Долгота"),
@@ -336,29 +334,31 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 firstDateLink: headerRow.indexOf("Первая дата ссылка"),
                 secondDate: headerRow.indexOf("Вторая дата"),
                 secondDateLink: headerRow.indexOf("Вторая дата ссылка"),
-                description: headerRow.indexOf("Описание") // Учитываем, что описание может отсутствовать
+                description: headerRow.indexOf("Описание"),
             };
 
-            // Проверка наличия обязательных колонок
-            if (indices.title === -1 || indices.polygonCoords === -1) {
-                throw new Error(`Обязательные колонки отсутствуют на листе ${sheetName}`);
+            // Проверка обязательных колонок
+            if (indices.group === -1 || indices.title === -1 || indices.latitude === -1 || indices.longitude === -1) {
+                throw new Error(`Некоторые обязательные колонки отсутствуют в листе ${sheetName}`);
             }
 
-            // Создание зоны, если ещё не существует
+            const zoneName = zoneKey;
+            const zoneDisplayName = sheetName;
+
             if (!zones[zoneKey]) {
-                zones[zoneKey] = { 
-                    polygon: null, 
+                zones[zoneKey] = {
+                    polygon: null,
                     label: null,
-                    groups: {}, 
-                    isVisible: false, 
+                    groups: {},
+                    isVisible: false,
                     polygonVisible: false,
-                    zoneName: zoneKey,
-                    zoneDisplayName: sheetName
+                    zoneName: zoneName,
+                    zoneDisplayName: zoneDisplayName,
                 };
             }
 
             // Генерация HTML для зоны
-            generateZoneHTML(zoneKey, sheetName, color);
+            generateZoneHTML(zoneKey, zoneDisplayName, color);
 
             // Парсинг координат полигона
             const polygonCoordsString = rows[1][indices.polygonCoords];
@@ -381,36 +381,33 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     const center = ymaps.util.bounds.getCenter(bounds);
 
                     zones[zoneKey].label = new ymaps.Placemark(center, {
-                        iconCaption: zoneKey,
+                        iconCaption: zoneName,
                     }, {
                         preset: 'islands#blueCircleDotIconWithCaption',
                         iconCaptionMaxWidth: '200',
                         iconColor: color,
                     });
                 } catch (e) {
-                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneKey}:`, e);
+                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
                 }
             }
 
             // Обработка строк с данными объектов
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-
                 const id = row[indices.id] || '';
                 const group = row[indices.group]?.trim() || '';
-                const subgroup = row[indices.subgroup]?.trim() || '';
-                const orders = row[indices.orders] || '';
-                const extraButton = row[indices.extraButton] || '';
+                const subgroup = indices.subgroup !== -1 ? row[indices.subgroup]?.trim() || '' : '';
                 const title = row[indices.title] || '';
-                const latitude = indices.latitude !== -1 ? parseFloat(row[indices.latitude]) : null;
-                const longitude = indices.longitude !== -1 ? parseFloat(row[indices.longitude]) : null;
-                const link = row[indices.link] || '';
-                const imageUrl = row[indices.imageUrl] || '';
-                const iconPreset = row[indices.iconPreset] || 'islands#blueDotIcon';
-                const firstDate = row[indices.firstDate] || '';
-                const firstDateLink = row[indices.firstDateLink] || '';
-                const secondDate = row[indices.secondDate] || '';
-                const secondDateLink = row[indices.secondDateLink] || '';
+                const latitude = parseFloat(row[indices.latitude]);
+                const longitude = parseFloat(row[indices.longitude]);
+                const link = indices.link !== -1 ? row[indices.link] : '';
+                const imageUrl = indices.imageUrl !== -1 ? row[indices.imageUrl] : '';
+                const iconPreset = indices.iconPreset !== -1 ? row[indices.iconPreset] : 'islands#blueDotIcon';
+                const firstDate = indices.firstDate !== -1 ? row[indices.firstDate] : '';
+                const firstDateLink = indices.firstDateLink !== -1 ? row[indices.firstDateLink] : '';
+                const secondDate = indices.secondDate !== -1 ? row[indices.secondDate] : '';
+                const secondDateLink = indices.secondDateLink !== -1 ? row[indices.secondDateLink] : '';
                 const description = indices.description !== -1 ? row[indices.description] : '';
 
                 // Проверка и создание групп и подгрупп
@@ -432,12 +429,9 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
                 generateObjectHTML(zoneKey, group, subgroup, id, title);
 
-                // Создание контента балуна
                 const balloonContent = `
                     <div style="text-align: center;">
                         <div class="balloon-title">${title}</div>
-                        ${orders ? `<p>Ордера: ${orders}</p>` : ''}
-                        ${extraButton ? `<p>Доп кнопка: ${extraButton}</p>` : ''}
                         ${firstDate && firstDateLink ? `<p><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>` : ''}
                         ${secondDate && secondDateLink ? `<p><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>` : ''}
                         ${imageUrl ? generateImageHTML(imageUrl, title) : ''}
@@ -446,18 +440,16 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     </div>
                 `;
 
-                const placemark = latitude && longitude
-                    ? new ymaps.Placemark([latitude, longitude], { balloonContent }, { preset: iconPreset })
-                    : null;
+                const placemark = new ymaps.Placemark([latitude, longitude], { balloonContent }, { preset: iconPreset });
 
-                // Добавляем объект в массив, если есть координаты
-                if (placemark) targetArray.push({ id, placemark });
+                // Добавляем объект
+                targetArray.push({ id, placemark });
             }
 
             // Обновляем количество объектов в группах и подгруппах
             updateGroupCounts(zoneKey);
 
-            // Настраиваем аккордеоны для раскрытия/закрытия
+            // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
