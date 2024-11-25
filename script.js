@@ -395,11 +395,16 @@ function fetchZoneData(zoneKey, sheetName, color) {
             }
 
             // Обработка строк с данными объектов (начиная со второй строки)
-            rows.slice(1).forEach((row, rowIndex) => {
-                // Пропускаем первую строку после заголовков, если она используется для координат полигона
-                if (rowIndex === 0 && indices.polygonCoords !== -1) {
-                    return; // Уже обработали координаты полигона
-                }
+            // Если вторая строка использовалась для координат полигона, пропускаем её
+            let startRow = 1;
+            if (indices.polygonCoords !== -1 && rows[1][indices.polygonCoords]) {
+                startRow = 2;
+            }
+
+            let skippedObjects = 0; // Счетчик пропущенных объектов
+
+            for (let i = startRow; i < rows.length; i++) {
+                const row = rows[i];
 
                 const id = indices.id !== -1 ? row[indices.id] || '' : '';
                 const group = indices.group !== -1 ? (row[indices.group]?.trim() || 'Без группы') : 'Без группы';
@@ -436,7 +441,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 // Проверка наличия обязательных координат
                 if (latitude === null || longitude === null || isNaN(latitude) || isNaN(longitude)) {
                     console.warn(`Неверные координаты для объекта с ID: ${id} на листе ${sheetName}`);
-                    return; // Пропускаем этот объект
+                    skippedObjects++;
+                    continue; // Пропускаем этот объект, но продолжаем обработку остальных
                 }
 
                 // Проверка и создание групп и подгрупп
@@ -473,7 +479,12 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
                 // Добавляем объект
                 targetArray.push({ id, placemark });
-            });
+            }
+
+            if (skippedObjects > 0) {
+                console.warn(`Пропущено ${skippedObjects} объектов из-за отсутствующих или некорректных координат.`);
+                // Можно добавить визуальный индикатор на интерфейс, если необходимо
+            }
 
             // Обновляем количество объектов в группах и подгруппах
             updateGroupCounts(zoneKey);
@@ -483,6 +494,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
