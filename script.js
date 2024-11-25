@@ -316,6 +316,33 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
             }
 
+            // Получаем строку заголовков и строим объект indices
+            const headerRow = rows[0];
+            const indices = {
+                id: headerRow.indexOf("ID"),
+                group: headerRow.indexOf("Группа"),
+                subgroup: headerRow.indexOf("Подгруппа"),
+                orders: headerRow.indexOf("Ордера"), // Для листа "Ордера"
+                extraButton: headerRow.indexOf("Доп кнопка"), // Для листа "Ордера"
+                title: headerRow.indexOf("Название"),
+                latitude: headerRow.indexOf("Широта"),
+                longitude: headerRow.indexOf("Долгота"),
+                link: headerRow.indexOf("Ссылка"),
+                imageUrl: headerRow.indexOf("URL изображения"),
+                iconPreset: headerRow.indexOf("Знак на карте"),
+                polygonCoords: headerRow.indexOf("Координаты полигона"),
+                firstDate: headerRow.indexOf("Первая дата"),
+                firstDateLink: headerRow.indexOf("Первая дата ссылка"),
+                secondDate: headerRow.indexOf("Вторая дата"),
+                secondDateLink: headerRow.indexOf("Вторая дата ссылка"),
+                description: headerRow.indexOf("Описание")
+            };
+
+            function getRowValue(row, indices, fieldName) {
+                const index = indices[fieldName];
+                return index !== undefined && index !== -1 ? row[index] : undefined;
+            }
+
             const zoneName = zoneKey;
             const zoneDisplayName = sheetName;
 
@@ -335,21 +362,20 @@ function fetchZoneData(zoneKey, sheetName, color) {
             generateZoneHTML(zoneKey, zoneDisplayName, color);
 
             // Парсинг координат полигона
-            const polygonCoordsString = rows[1][9];
-            let coordinates;
+            const polygonCoordsString = getRowValue(rows[1], indices, 'polygonCoords');
             if (polygonCoordsString) {
                 try {
-                    coordinates = JSON.parse(polygonCoordsString);
+                    let coordinates = JSON.parse(polygonCoordsString);
                     coordinates = swapCoordinates(coordinates);
 
-                    // Создаём полигон
+                    // Создаем полигон
                     zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
                         fillColor: color,
                         strokeColor: '#333',
                         opacity: 0.4,
                     });
 
-                    // Создаём метку
+                    // Создаем метку
                     const flatCoords = flattenCoords(coordinates);
                     const bounds = ymaps.util.bounds.fromPoints(flatCoords);
                     const center = ymaps.util.bounds.getCenter(bounds);
@@ -368,12 +394,27 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
             // Обработка строк с данными объектов
             for (let i = 1; i < rows.length; i++) {
-                const [
-                    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
-                    , firstDate, firstDateLink, secondDate, secondDateLink, description
-                ] = rows[i];
+                const row = rows[i];
 
-                const group = groupCell ? groupCell.trim() : '';
+                const id = getRowValue(row, indices, 'id');
+                const groupCell = getRowValue(row, indices, 'group');
+                const subgroupCell = getRowValue(row, indices, 'subgroup');
+                const title = getRowValue(row, indices, 'title');
+                const lat = getRowValue(row, indices, 'latitude');
+                const lon = getRowValue(row, indices, 'longitude');
+                const link = getRowValue(row, indices, 'link');
+                const imageUrl = getRowValue(row, indices, 'imageUrl');
+                const iconPreset = getRowValue(row, indices, 'iconPreset');
+                const firstDate = getRowValue(row, indices, 'firstDate');
+                const firstDateLink = getRowValue(row, indices, 'firstDateLink');
+                const secondDate = getRowValue(row, indices, 'secondDate');
+                const secondDateLink = getRowValue(row, indices, 'secondDateLink');
+                const description = getRowValue(row, indices, 'description');
+                const orders = getRowValue(row, indices, 'orders');
+                const extraButton = getRowValue(row, indices, 'extraButton');
+
+                // Проверка и преобразование данных
+                const group = groupCell ? groupCell.trim() : 'Без группы';
                 const subgroup = subgroupCell ? subgroupCell.trim() : '';
                 const latitude = parseFloat(lat);
                 const longitude = parseFloat(lon);
@@ -404,29 +445,36 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const secondDateContent = secondDate && secondDateLink
                     ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
                     : '';
-
+                const ordersContent = orders ? `<p>${orders}</p>` : '';
+                const extraButtonContent = extraButton ? `<button onclick="yourFunction('${extraButton}')">${extraButton}</button>` : '';
                 const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
                 const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
                 const balloonContent = `
                     <div style="text-align: center;">
                         <div class="balloon-title">${title || ''}</div>
-                        ${firstDateContent} 
-                        ${secondDateContent} 
+                        ${firstDateContent}
+                        ${secondDateContent}
+                        ${ordersContent}
+                        ${extraButtonContent}
                         ${imageContent}
-                        <p>${formattedDescription}</p> 
-                        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
+                        <p>${formattedDescription}</p>
+                        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''}
                     </div>
                 `;
 
-                const placemark = new ymaps.Placemark([latitude, longitude], {
-                    balloonContent: balloonContent,
-                }, {
-                    preset: cleanIconPreset,
-                });
+                if (!isNaN(latitude) && !isNaN(longitude) && (latitude !== 0 || longitude !== 0)) {
+                    const placemark = new ymaps.Placemark([latitude, longitude], {
+                        balloonContent: balloonContent,
+                    }, {
+                        preset: cleanIconPreset,
+                    });
 
-                // Добавляем объект
-                targetArray.push({ id, placemark });
+                    // Добавляем объект
+                    targetArray.push({ id, placemark });
+                } else {
+                    console.warn(`Пропущены или некорректные координаты для объекта с ID: ${id}`);
+                }
             }
 
             // Обновляем количество объектов в группах и подгруппах
