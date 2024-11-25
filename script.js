@@ -302,7 +302,7 @@ function flattenCoords(coords) {
 
 
 function fetchZoneData(zoneKey, sheetName, color) {
-    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey};
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
     return fetch(url)
         .then(response => {
             if (!response.ok) {
