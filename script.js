@@ -360,41 +360,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
             // Генерация HTML для зоны
             generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-            // Парсинг координат полигона
-            const polygonCoordsString = rows[1][indices.polygonCoords];
-            let coordinates;
-            if (polygonCoordsString) {
-                try {
-                    coordinates = JSON.parse(polygonCoordsString);
-                    coordinates = swapCoordinates(coordinates);
-
-                    // Создаём полигон
-                    zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
-                        fillColor: color,
-                        strokeColor: '#333',
-                        opacity: 0.4,
-                    });
-
-                    // Создаём метку
-                    const flatCoords = flattenCoords(coordinates);
-                    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
-                    const center = ymaps.util.bounds.getCenter(bounds);
-
-                    zones[zoneKey].label = new ymaps.Placemark(center, {
-                        iconCaption: zoneName,
-                    }, {
-                        preset: 'islands#blueCircleDotIconWithCaption',
-                        iconCaptionMaxWidth: '200',
-                        iconColor: color,
-                    });
-                } catch (e) {
-                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
-                }
-            }
-
             // Обработка строк с данными объектов
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
+            rows.slice(1).forEach(row => {
                 const id = row[indices.id] || '';
                 const group = row[indices.group]?.trim() || '';
                 const subgroup = indices.subgroup !== -1 ? row[indices.subgroup]?.trim() || '' : '';
@@ -444,7 +411,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
                 // Добавляем объект
                 targetArray.push({ id, placemark });
-            }
+            });
 
             // Обновляем количество объектов в группах и подгруппах
             updateGroupCounts(zoneKey);
@@ -454,6 +421,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
