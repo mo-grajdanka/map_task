@@ -484,6 +484,9 @@ function init() {
         } else if (zones[selectedZone]) {
             // Отображаем выбранный полигон
             showZonePolygon(selectedZone);
+
+          console.log(`Выбранная зона: '${selectedZone}'`);
+          console.log('Доступные ключи в zones:', Object.keys(zones));
         }
     });
 }
