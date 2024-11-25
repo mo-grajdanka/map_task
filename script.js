@@ -338,8 +338,10 @@ function fetchZoneData(zoneKey, sheetName, color) {
             };
 
             // Проверка обязательных колонок
-            if (indices.group === -1 || indices.title === -1 || indices.latitude === -1 || indices.longitude === -1) {
-                throw new Error(`Некоторые обязательные колонки отсутствуют в листе ${sheetName}`);
+            const requiredColumns = ["group", "title", "latitude", "longitude"];
+            const missingRequiredColumns = requiredColumns.filter(col => indices[col] === -1);
+            if (missingRequiredColumns.length > 0) {
+                throw new Error(`Отсутствуют обязательные колонки (${missingRequiredColumns.join(', ')}) в листе ${sheetName}`);
             }
 
             const zoneName = zoneKey;
@@ -394,17 +396,27 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
             // Обработка строк с данными объектов (начиная со второй строки)
             rows.slice(1).forEach((row, rowIndex) => {
-                // Пропускаем первую строку, если она используется для координат полигона
+                // Пропускаем первую строку после заголовков, если она используется для координат полигона
                 if (rowIndex === 0 && indices.polygonCoords !== -1) {
                     return; // Уже обработали координаты полигона
                 }
 
                 const id = indices.id !== -1 ? row[indices.id] || '' : '';
-                const group = indices.group !== -1 ? (row[indices.group]?.trim() || '') : '';
+                const group = indices.group !== -1 ? (row[indices.group]?.trim() || 'Без группы') : 'Без группы';
                 const subgroup = indices.subgroup !== -1 ? (row[indices.subgroup]?.trim() || '') : '';
-                const title = indices.title !== -1 ? (row[indices.title] || '') : '';
-                const latitude = indices.latitude !== -1 ? parseFloat(row[indices.latitude]) : null;
-                const longitude = indices.longitude !== -1 ? parseFloat(row[indices.longitude]) : null;
+                const title = indices.title !== -1 ? (row[indices.title] || 'Без названия') : 'Без названия';
+
+                // Обработка координат с заменой запятых на точки
+                const latitudeRaw = indices.latitude !== -1 ? row[indices.latitude] || '' : '';
+                const longitudeRaw = indices.longitude !== -1 ? row[indices.longitude] || '' : '';
+
+                // Замена запятых на точки и удаление пробелов
+                const latitudeParsed = latitudeRaw.replace(',', '.').trim();
+                const longitudeParsed = longitudeRaw.replace(',', '.').trim();
+
+                const latitude = latitudeParsed ? parseFloat(latitudeParsed) : null;
+                const longitude = longitudeParsed ? parseFloat(longitudeParsed) : null;
+
                 const link = indices.link !== -1 ? row[indices.link] || '' : '';
                 const imageUrl = indices.imageUrl !== -1 ? row[indices.imageUrl] || '' : '';
                 const iconPreset = indices.iconPreset !== -1 ? row[indices.iconPreset] || 'islands#blueDotIcon' : 'islands#blueDotIcon';
@@ -413,6 +425,13 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const secondDate = indices.secondDate !== -1 ? row[indices.secondDate] || '' : '';
                 const secondDateLink = indices.secondDateLink !== -1 ? row[indices.secondDateLink] || '' : '';
                 const description = indices.description !== -1 ? (row[indices.description]?.replace(/\n/g, '<br>') || '') : '';
+
+                // Логирование для отладки
+                console.log(`Обрабатывается объект ID: ${id}`);
+                console.log(`Raw Широта: "${latitudeRaw}"`);
+                console.log(`Raw Долгота: "${longitudeRaw}"`);
+                console.log(`Parsed Широта: ${latitude}`);
+                console.log(`Parsed Долгота: ${longitude}`);
 
                 // Проверка наличия обязательных координат
                 if (latitude === null || longitude === null || isNaN(latitude) || isNaN(longitude)) {
