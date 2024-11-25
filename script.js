@@ -316,8 +316,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
             }
 
-            // Получаем строку заголовков и строим объект indices
-            const headerRow = rows[0];
+    // Тримминг всех заголовков
+    const headerRow = rows[0].map(header => header.trim());
             const indices = {
                 id: headerRow.indexOf("ID"),
                 group: headerRow.indexOf("Группа"),
