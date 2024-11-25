@@ -335,12 +335,13 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 firstDate: headerRow.indexOf("Первая дата"),
                 firstDateLink: headerRow.indexOf("Первая дата ссылка"),
                 secondDate: headerRow.indexOf("Вторая дата"),
-                secondDateLink: headerRow.indexOf("Вторая дата ссылка")
+                secondDateLink: headerRow.indexOf("Вторая дата ссылка"),
+                description: headerRow.indexOf("Описание") // Добавлено для защиты от отсутствия
             };
 
             // Проверка наличия обязательных колонок
-            if (indices.polygonCoords === -1) {
-                throw new Error("Колонка 'Координаты полигона' отсутствует в заголовках");
+            if (indices.title === -1 || indices.polygonCoords === -1) {
+                throw new Error(`Обязательные колонки отсутствуют на листе ${sheetName}`);
             }
 
             // Создание зоны, если ещё не существует
@@ -401,8 +402,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const orders = row[indices.orders] || '';
                 const extraButton = row[indices.extraButton] || '';
                 const title = row[indices.title] || '';
-                const latitude = parseFloat(row[indices.latitude]);
-                const longitude = parseFloat(row[indices.longitude]);
+                const latitude = indices.latitude !== -1 ? parseFloat(row[indices.latitude]) : null;
+                const longitude = indices.longitude !== -1 ? parseFloat(row[indices.longitude]) : null;
                 const link = row[indices.link] || '';
                 const imageUrl = row[indices.imageUrl] || '';
                 const iconPreset = row[indices.iconPreset] || 'islands#blueDotIcon';
@@ -410,6 +411,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const firstDateLink = row[indices.firstDateLink] || '';
                 const secondDate = row[indices.secondDate] || '';
                 const secondDateLink = row[indices.secondDateLink] || '';
+                const description = indices.description !== -1 ? row[indices.description] : '';
 
                 // Проверка и создание групп и подгрупп
                 if (!zones[zoneKey].groups[group]) {
@@ -444,10 +446,12 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     </div>
                 `;
 
-                const placemark = new ymaps.Placemark([latitude, longitude], { balloonContent }, { preset: iconPreset });
+                const placemark = latitude && longitude
+                    ? new ymaps.Placemark([latitude, longitude], { balloonContent }, { preset: iconPreset })
+                    : null;
 
-                // Добавляем объект в массив
-                targetArray.push({ id, placemark });
+                // Добавляем объект в массив, если есть координаты
+                if (placemark) targetArray.push({ id, placemark });
             }
 
             // Обновляем количество объектов в группах
@@ -458,6 +462,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
