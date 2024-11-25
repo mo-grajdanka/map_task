@@ -468,27 +468,32 @@ function init() {
 
     // Обработчик для выпадающего списка
     const zoneSelect = document.getElementById('zone-select');
-    zoneSelect.addEventListener('change', function () {
-        const selectedZone = this.value;
+   zoneSelect.addEventListener('change', function () {
+    const selectedZone = this.value;
+
     console.log(`Выбрана зона: '${selectedZone}'`);
     console.log('Доступные ключи в zones:', Object.keys(zones));
-        // Скрываем все полигоны
-        for (let zoneKey in zones) {
-            hideZonePolygon(zoneKey);
-        }
 
-        if (selectedZone === 'all') {
-            // Отображаем все полигоны
-            for (let zoneKey in zones) {
+    // Скрываем все полигоны
+    for (let zoneKey in zones) {
+        hideZonePolygon(zoneKey);
+    }
+
+    if (selectedZone === 'all') {
+        // Отображаем только числовые полигоны
+        for (let zoneKey in zones) {
+            if (!isNaN(zoneKey)) { // Проверяем, является ли ключ числом
                 showZonePolygon(zoneKey);
             }
-        } else if (zones[selectedZone]) {
-            // Отображаем выбранный полигон
-            showZonePolygon(selectedZone);
-
-
         }
-    });
+    } else if (zones[selectedZone]) {
+        // Отображаем выбранный полигон
+        showZonePolygon(selectedZone);
+    } else {
+        console.warn(`Зона с ключом '${selectedZone}' не найдена.`);
+    }
+});
+
 }
 
 function populateZoneDropdown() {
