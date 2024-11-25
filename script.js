@@ -313,21 +313,21 @@ function fetchZoneData(zoneKey, sheetName, color) {
         .then(data => {
             const rows = data.values;
             if (!rows || rows.length < 2) {
-                throw new Error(Данные с листа ${sheetName} пусты или недоступны);
+                throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
             }
 
             const zoneName = zoneKey;
             const zoneDisplayName = sheetName;
 
             if (!zones[zoneKey]) {
-                zones[zoneKey] = { 
-                    polygon: null, 
+                zones[zoneKey] = {
+                    polygon: null,
                     label: null,
-                    groups: {}, 
-                    isVisible: false, 
+                    groups: {},
+                    isVisible: false,
                     polygonVisible: false,
                     zoneName: zoneName,
-                    zoneDisplayName: zoneDisplayName
+                    zoneDisplayName: zoneDisplayName,
                 };
             }
 
@@ -362,7 +362,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                         iconColor: color,
                     });
                 } catch (e) {
-                    console.error(Ошибка при парсинге координат полигона для зоны ${zoneName}:, e);
+                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
                 }
             }
 
@@ -379,7 +379,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const longitude = parseFloat(lon);
 
                 if (!zones[zoneKey].groups[group]) {
-                 //   console.log(Создание новой группы: '${group}' в зоне '${zoneKey}');
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
                     generateGroupHTML(zoneKey, group);
                 }
@@ -387,7 +386,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 let targetArray;
                 if (subgroup) {
                     if (!zones[zoneKey].groups[group].subgroups[subgroup]) {
-                       // console.log(Создание новой подгруппы: '${subgroup}' в группе '${group}' зоны '${zoneKey}');
                         zones[zoneKey].groups[group].subgroups[subgroup] = [];
                         generateSubgroupHTML(zoneKey, group, subgroup);
                     }
@@ -401,30 +399,30 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const cleanIconPreset = (iconPreset || 'islands#blueDotIcon').replace(/['"]/g, '').trim();
 
                 const firstDateContent = firstDate && firstDateLink
-                    ? <p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>
+                    ? `<p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>`
                     : '';
                 const secondDateContent = secondDate && secondDateLink
-                    ? <p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>
+                    ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
                     : '';
 
                 const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
                 const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
-                const balloonContent = 
+                const balloonContent = `
                     <div style="text-align: center;">
                         <div class="balloon-title">${title || ''}</div>
-                        ${firstDateContent ? <div>${firstDateContent}</div> : ''} 
-                        ${secondDateContent ? <div>${secondDateContent}</div> : ''} 
+                        ${firstDateContent} 
+                        ${secondDateContent} 
                         ${imageContent}
                         <p>${formattedDescription}</p> 
-                        ${link ? <a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br> : ''} 
+                        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
                     </div>
-                ;
+                `;
 
                 const placemark = new ymaps.Placemark([latitude, longitude], {
-                    balloonContent: balloonContent
+                    balloonContent: balloonContent,
                 }, {
-                    preset: cleanIconPreset
+                    preset: cleanIconPreset,
                 });
 
                 // Добавляем объект
@@ -437,7 +435,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
-        .catch(error => console.error(Ошибка при загрузке данных с листа ${sheetName}:, error));
+        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
 
 
