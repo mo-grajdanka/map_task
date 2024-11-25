@@ -454,14 +454,15 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 if (placemark) targetArray.push({ id, placemark });
             }
 
-            // Обновляем количество объектов в группах
+            // Обновляем количество объектов в группах и подгруппах
             updateGroupCounts(zoneKey);
 
-            // Настраиваем аккордеоны
+            // Настраиваем аккордеоны для раскрытия/закрытия
             setupAccordion(zoneKey);
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
