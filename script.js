@@ -450,7 +450,7 @@ function init() {
     myMap = new ymaps.Map("map", { center: initialCenter, zoom: initialZoom });
 
     const colors = [
-        '#FFA50088', '#4682B488', '#1E90FF', '#32CD32'
+        '#FFA50088', '#4682B488', '#32CD32', '#1E90FF'
     ];
 
     let zoneKeys = Object.keys(zoneMappings); // ["Зона 1", "Зона 2", "Зона 3", "Зона 4"]
