@@ -306,7 +306,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText});
+                throw new Error(`Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText}`);
             }
             return response.json();
         })
