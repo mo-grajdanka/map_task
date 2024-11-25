@@ -336,7 +336,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 firstDateLink: headerRow.indexOf("Первая дата ссылка"),
                 secondDate: headerRow.indexOf("Вторая дата"),
                 secondDateLink: headerRow.indexOf("Вторая дата ссылка"),
-                description: headerRow.indexOf("Описание") // Добавлено для защиты от отсутствия
+                description: headerRow.indexOf("Описание") // Учитываем, что описание может отсутствовать
             };
 
             // Проверка наличия обязательных колонок
