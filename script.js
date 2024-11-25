@@ -303,7 +303,6 @@ function flattenCoords(coords) {
 
 function fetchZoneData(zoneKey, sheetName, color) {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
-    
     return fetch(url)
         .then(response => {
             if (!response.ok) {
@@ -335,52 +334,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
             // Генерация HTML для зоны
             generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-            // Определение индексов столбцов в зависимости от листа
-            let indices;
-            if (sheetName === "Ордера") {
-                // Индексы для листа "Ордера"
-                indices = {
-                    id: 0,
-                    group: 1,
-                    subgroup: 2,
-                    orders: 3, // Дополнительный столбец
-                    extraButton: 4, // Дополнительный столбец
-                    title: 5,
-                    latitude: 6,
-                    longitude: 7,
-                    link: 8,
-                    imageUrl: 9,
-                    iconPreset: 10,
-                    polygonCoords: 11,
-                    firstDate: 12,
-                    firstDateLink: 13,
-                    secondDate: 14,
-                    secondDateLink: 15,
-                    description: -1 // Отсутствует в листе "Ордера"
-                };
-            } else {
-                // Индексы для стандартных листов
-                indices = {
-                    id: 0,
-                    group: 1,
-                    subgroup: 2,
-                    title: 3,
-                    latitude: 4,
-                    longitude: 5,
-                    link: 6,
-                    imageUrl: 7,
-                    iconPreset: 8,
-                    polygonCoords: 9,
-                    firstDate: 10,
-                    firstDateLink: 11,
-                    secondDate: 12,
-                    secondDateLink: 13,
-                    description: 14
-                };
-            }
-
-            // Парсинг координат полигона (если доступно)
-            const polygonCoordsString = rows[1][indices.polygonCoords];
+            // Парсинг координат полигона
+            const polygonCoordsString = rows[1][9];
             let coordinates;
             if (polygonCoordsString) {
                 try {
@@ -413,45 +368,16 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
             // Обработка строк с данными объектов
             for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
+                const [
+                    id, groupCell, subgroupCell, title, lat, lon, link, imageUrl, iconPreset,
+                    , firstDate, firstDateLink, secondDate, secondDateLink, description
+                ] = rows[i];
 
-                // Для листа "Ордера" пропускаем столбцы "Ордера" и "Доп кнопка"
-                const id = indices.id !== -1 ? row[indices.id] || '' : '';
-                const group = indices.group !== -1 ? (row[indices.group]?.trim() || 'Без группы') : 'Без группы';
-                const subgroup = indices.subgroup !== -1 ? (row[indices.subgroup]?.trim() || '') : '';
-                const title = indices.title !== -1 ? (row[indices.title] || 'Без названия') : 'Без названия';
-                const lat = indices.latitude !== -1 ? row[indices.latitude] || '' : '';
-                const lon = indices.longitude !== -1 ? row[indices.longitude] || '' : '';
-                const link = indices.link !== -1 ? row[indices.link] || '' : '';
-                const imageUrl = indices.imageUrl !== -1 ? row[indices.imageUrl] || '' : '';
-                const iconPreset = indices.iconPreset !== -1 ? row[indices.iconPreset] || 'islands#blueDotIcon' : 'islands#blueDotIcon';
-                const firstDate = indices.firstDate !== -1 ? row[indices.firstDate] || '' : '';
-                const firstDateLink = indices.firstDateLink !== -1 ? row[indices.firstDateLink] || '' : '';
-                const secondDate = indices.secondDate !== -1 ? row[indices.secondDate] || '' : '';
-                const secondDateLink = indices.secondDateLink !== -1 ? row[indices.secondDateLink] || '' : '';
-                const description = indices.description !== -1 ? (row[indices.description]?.replace(/\n/g, '<br>') || '') : '';
+                const group = groupCell ? groupCell.trim() : '';
+                const subgroup = subgroupCell ? subgroupCell.trim() : '';
+                const latitude = parseFloat(lat);
+                const longitude = parseFloat(lon);
 
-                // Обработка координат с заменой запятых на точки
-                const latitudeParsed = lat.replace(',', '.').trim();
-                const longitudeParsed = lon.replace(',', '.').trim();
-
-                const latitude = latitudeParsed ? parseFloat(latitudeParsed) : null;
-                const longitude = longitudeParsed ? parseFloat(longitudeParsed) : null;
-
-                // Логирование для отладки
-                console.log(`Обрабатывается объект ID: ${id}`);
-                console.log(`Raw Широта: "${lat}"`);
-                console.log(`Raw Долгота: "${lon}"`);
-                console.log(`Parsed Широта: ${latitude}`);
-                console.log(`Parsed Долгота: ${longitude}`);
-
-                // Проверка наличия обязательных координат
-                if (latitude === null || longitude === null || isNaN(latitude) || isNaN(longitude)) {
-                    console.warn(`Неверные координаты для объекта с ID: ${id} на листе ${sheetName}`);
-                    continue; // Пропускаем этот объект, но продолжаем обработку остальных
-                }
-
-                // Проверка и создание групп и подгрупп
                 if (!zones[zoneKey].groups[group]) {
                     zones[zoneKey].groups[group] = { subgroups: {}, objects: [] };
                     generateGroupHTML(zoneKey, group);
@@ -469,6 +395,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 }
 
                 generateObjectHTML(zoneKey, group, subgroup, id, title);
+
+                const cleanIconPreset = (iconPreset || 'islands#blueDotIcon').replace(/['"]/g, '').trim();
 
                 const firstDateContent = firstDate && firstDateLink
                     ? `<p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>`
@@ -494,7 +422,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const placemark = new ymaps.Placemark([latitude, longitude], {
                     balloonContent: balloonContent,
                 }, {
-                    preset: iconPreset,
+                    preset: cleanIconPreset,
                 });
 
                 // Добавляем объект
@@ -509,7 +437,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
         })
         .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
-
 
 
 
