@@ -470,7 +470,8 @@ function init() {
     const zoneSelect = document.getElementById('zone-select');
     zoneSelect.addEventListener('change', function () {
         const selectedZone = this.value;
-
+    console.log(`Выбрана зона: '${selectedZone}'`);
+    console.log('Доступные ключи в zones:', Object.keys(zones));
         // Скрываем все полигоны
         for (let zoneKey in zones) {
             hideZonePolygon(zoneKey);
@@ -485,8 +486,7 @@ function init() {
             // Отображаем выбранный полигон
             showZonePolygon(selectedZone);
 
-          console.log(`Выбранная зона: '${selectedZone}'`);
-          console.log('Доступные ключи в zones:', Object.keys(zones));
+
         }
     });
 }
