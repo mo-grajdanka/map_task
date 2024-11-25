@@ -302,18 +302,18 @@ function flattenCoords(coords) {
 
 
 function fetchZoneData(zoneKey, sheetName, color) {
-    const url = https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey};
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}?key=${apiKey}`;
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText});
+                throw new Error(`Ошибка при загрузке данных с листа ${sheetName}: ${response.statusText}`);
             }
             return response.json();
         })
         .then(data => {
             const rows = data.values;
             if (!rows || rows.length < 2) {
-                throw new Error(Данные с листа ${sheetName} пусты или недоступны);
+                throw new Error(`Данные с листа ${sheetName} пусты или недоступны`);
             }
 
             const zoneName = zoneKey;
@@ -362,7 +362,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                         iconColor: color,
                     });
                 } catch (e) {
-                    console.error(Ошибка при парсинге координат полигона для зоны ${zoneName}:, e);
+                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
                 }
             }
 
@@ -399,25 +399,25 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const cleanIconPreset = (iconPreset || 'islands#blueDotIcon').replace(/['"]/g, '').trim();
 
                 const firstDateContent = firstDate && firstDateLink
-                    ? <p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>
+                    ? `<p class="date-link"><a href="${firstDateLink}" target="_blank">${firstDate}</a></p>`
                     : '';
                 const secondDateContent = secondDate && secondDateLink
-                    ? <p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>
+                    ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
                     : '';
 
                 const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
                 const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
-                const balloonContent = 
+                const balloonContent = `
                     <div style="text-align: center;">
                         <div class="balloon-title">${title || ''}</div>
                         ${firstDateContent} 
                         ${secondDateContent} 
                         ${imageContent}
                         <p>${formattedDescription}</p> 
-                        ${link ? <a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br> : ''} 
+                        ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''} 
                     </div>
-                ;
+                `;
 
                 const placemark = new ymaps.Placemark([latitude, longitude], {
                     balloonContent: balloonContent,
@@ -435,8 +435,9 @@ function fetchZoneData(zoneKey, sheetName, color) {
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
         })
-        .catch(error => console.error(Ошибка при загрузке данных с листа ${sheetName}:, error));
+        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
