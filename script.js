@@ -399,6 +399,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 const id = getRowValue(row, indices, 'id');
                 const groupCell = getRowValue(row, indices, 'group');
                 const subgroupCell = getRowValue(row, indices, 'subgroup');
+             console.log(`Строка ${i}: subgroupCell = '${subgroupCell}'`);
                 const title = getRowValue(row, indices, 'title');
                 const lat = getRowValue(row, indices, 'latitude');
                 const lon = getRowValue(row, indices, 'longitude');
