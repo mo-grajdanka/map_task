@@ -498,3 +498,18 @@ input[type="checkbox"] {
 #next-slide {
     right: 10px;
 }
+
+
+.order {
+    margin-left: 20px;
+}
+
+.order .accordion-header {
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.order .accordion-content {
+    margin-left: 20px;
+}
