@@ -447,7 +447,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     ? `<p class="date-link"><a href="${secondDateLink}" target="_blank">${secondDate}</a></p>`
                     : '';
                 const ordersContent = orders ? `<p>${orders}</p>` : '';
-                const extraButtonContent = extraButton ? `<button onclick="yourFunction('${extraButton}')">${extraButton}</button>` : '';
                 const formattedDescription = description ? description.replace(/\n/g, '<br>') : '';
                 const imageContent = imageUrl ? generateImageHTML(imageUrl, title) : '';
 
@@ -457,7 +456,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                         ${firstDateContent}
                         ${secondDateContent}
                         ${ordersContent}
-                        ${extraButtonContent}
                         ${imageContent}
                         <p>${formattedDescription}</p>
                         ${link ? `<a href="${link}" target="_blank" class="balloon-link">Подробнее</a><br>` : ''}
