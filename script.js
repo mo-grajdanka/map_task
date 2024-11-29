@@ -601,7 +601,7 @@ if (!zones[zoneKey].groups[group]) {
 
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
-        })
+        }})
         .catch(error => {
             console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error);
         });
