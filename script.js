@@ -268,30 +268,25 @@ function addGeoDataToPhoto(blob) {
 
 
 
-function flattenCoords(coords) {
-    let flatCoords = [];
-    coords.forEach(function(coord) {
-        if (Array.isArray(coord[0])) {
-            flatCoords = flatCoords.concat(flattenCoords(coord));
-        } else {
-            flatCoords.push(coord);
-        }
-    });
-    return flatCoords;
-}
+// function flattenCoords(coords) {
+//    let flatCoords = [];
+//    coords.forEach(function(coord) {
+//        if (Array.isArray(coord[0])) {
+//            flatCoords = flatCoords.concat(flattenCoords(coord));
+//        } else {
+//            flatCoords.push(coord);
+//        }
+//    });
+//    return flatCoords;
+// }
 function swapCoordinates(coords) {
     if (Array.isArray(coords)) {
-        if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-            // Если это пара координат, меняем местами
-            return [coords[1], coords[0]];
-        } else {
-            // Иначе рекурсивно обрабатываем вложенные массивы
-            return coords.map(swapCoordinates);
-        }
+        return coords.map(swapCoordinates);
     } else {
         return coords;
     }
 }
+
 
 
 
@@ -374,23 +369,24 @@ if (polygonCoordsStrings.length > 0) {
         polygonCoordsStrings.forEach(coordsString => {
             let coordinates = JSON.parse(coordsString);
             console.log('Координаты до перестановки:', JSON.stringify(coordinates));
-            coordinates = swapCoordinates(coordinates);
+            // Важно: не вызываем swapCoordinates здесь, если координаты уже в нужном порядке
+            // coordinates = swapCoordinates(coordinates);
             console.log('Координаты после перестановки:', JSON.stringify(coordinates));
 
             // Убедимся, что каждый полигон имеет правильную структуру
-            if (!Array.isArray(coordinates[0][0])) {
-                // Если это массив точек, оборачиваем его в массив контура
+            if (!Array.isArray(coordinates[0][0][0])) {
+                // Если координаты имеют структуру [ [ [x, y], ... ] ], оборачиваем в дополнительный массив
                 coordinates = [coordinates];
             }
 
-            // Добавляем полигон в общий массив
+            // Добавляем координаты полигона в общий массив
             allCoordinates.push(coordinates);
         });
 
-        // Создаём один объект MultiPolygon
+        // Создаём объект MultiPolygon
         zones[zoneKey].polygon = new ymaps.GeoObject({
             geometry: {
-                type: "MultiPolygon",
+                type: 'MultiPolygon',
                 coordinates: allCoordinates,
             },
             properties: {},
@@ -401,11 +397,13 @@ if (polygonCoordsStrings.length > 0) {
             strokeWidth: 2,
         });
 
-        // Вычисляем общие границы и центр для метки
+        // Вычисляем границы и центр для метки
         let flatCoords = [];
         allCoordinates.forEach(polygonCoords => {
             polygonCoords.forEach(contour => {
-                flatCoords = flatCoords.concat(contour);
+                contour.forEach(point => {
+                    flatCoords.push(point);
+                });
             });
         });
         const bounds = ymaps.util.bounds.fromPoints(flatCoords);
@@ -421,11 +419,12 @@ if (polygonCoordsStrings.length > 0) {
 
         console.log(`Полигоны успешно созданы для зоны '${zoneKey}'`);
     } catch (e) {
-        console.error(`Ошибка при парсинге координат полигонов для зоны ${zoneDisplayName}:`, e);
+        console.error(`Ошибка при обработке координат полигонов для зоны ${zoneDisplayName}:`, e);
     }
 } else {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
+
 
 
 
