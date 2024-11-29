@@ -373,22 +373,23 @@ if (polygonCoordsStrings.length > 0) {
 
         polygonCoordsStrings.forEach(coordsString => {
             let coordinates = JSON.parse(coordsString);
+            console.log('Координаты до перестановки:', JSON.stringify(coordinates));
             coordinates = swapCoordinates(coordinates);
+            console.log('Координаты после перестановки:', JSON.stringify(coordinates));
             allCoordinates.push(coordinates);
         });
 
-        // Создаём массив полигонов
-try {
-    zones[zoneKey].polygons = allCoordinates.map(coordinates => new ymaps.Polygon(coordinates, {}, {
-        fillColor: color,
-        strokeColor: '#333',
-        opacity: 0.4,
-    }));
-} catch (e) {
-    console.error(`Ошибка при создании полигона для зоны '${zoneKey}':`, e);
-}
+        // Создаём полигоны и сохраняем их в zones[zoneKey].polygons
+        zones[zoneKey].polygons = allCoordinates.map(coordinates => {
+            return new ymaps.Polygon(coordinates, {}, {
+                fillColor: color,
+                strokeColor: '#333',
+                opacity: 0.6,
+                strokeWidth: 2,
+            });
+        });
 
-        // Вычисляем границы и центр
+        // Вычисляем общие границы и центр для метки
         let flatCoords = [];
         allCoordinates.forEach(coords => {
             flatCoords = flatCoords.concat(flattenCoords(coords));
@@ -397,7 +398,7 @@ try {
         const center = ymaps.util.bounds.getCenter(bounds);
 
         zones[zoneKey].label = new ymaps.Placemark(center, {
-            iconCaption: zoneName,
+            iconCaption: zoneDisplayName,
         }, {
             preset: 'islands#blueCircleDotIconWithCaption',
             iconCaptionMaxWidth: '200',
@@ -406,11 +407,12 @@ try {
 
         console.log(`Полигоны успешно созданы для зоны '${zoneKey}'`);
     } catch (e) {
-        console.error(`Ошибка при парсинге координат полигонов для зоны ${zoneName}:`, e);
+        console.error(`Ошибка при парсинге координат полигонов для зоны ${zoneDisplayName}:`, e);
     }
 } else {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
+
 
 
 // Обработка строк с данными объектов
@@ -1227,16 +1229,11 @@ function showZonePolygon(zoneKey) {
     zone.polygonVisible = true;
 }
 
-
-
-
-
-
 function hideZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || !zone.polygonVisible) return;
 
-    if (zone.polygons) {
+    if (zone.polygons && zone.polygons.length > 0) {
         zone.polygons.forEach(polygon => myMap.geoObjects.remove(polygon));
     }
     if (zone.label) {
@@ -1244,6 +1241,7 @@ function hideZonePolygon(zoneKey) {
     }
     zone.polygonVisible = false;
 }
+
 
 
 
