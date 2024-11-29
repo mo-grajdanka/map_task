@@ -387,8 +387,8 @@ if (polygonCoordsStrings.length > 0) {
         polygonCoordsStrings.forEach(coordsString => {
             let coordinates = JSON.parse(coordsString);
             console.log('Координаты до перестановки:', JSON.stringify(coordinates));
-            // Если необходимо, вызываем swapCoordinates
-            // coordinates = swapCoordinates(coordinates);
+            
+             coordinates = swapCoordinates(coordinates);
             console.log('Координаты после перестановки:', JSON.stringify(coordinates));
 
             // Проверяем структуру координат
