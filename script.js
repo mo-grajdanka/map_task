@@ -390,11 +390,15 @@ if (polygonCoordsStrings.length > 0) {
         });
 
         // Создаём массив полигонов
-        zones[zoneKey].polygons = allCoordinates.map(coordinates => new ymaps.Polygon(coordinates, {}, {
-            fillColor: color,
-            strokeColor: '#333',
-            opacity: 0.4,
-        }));
+try {
+    zones[zoneKey].polygons = allCoordinates.map(coordinates => new ymaps.Polygon(coordinates, {}, {
+        fillColor: color,
+        strokeColor: '#333',
+        opacity: 0.4,
+    }));
+} catch (e) {
+    console.error(`Ошибка при создании полигона для зоны '${zoneKey}':`, e);
+}
 
         // Вычисляем границы и центр
         let flatCoords = [];
@@ -545,6 +549,7 @@ if (!zones[zoneKey].groups[group]) {
                         try {
                             let coordinates = JSON.parse(polygonCoordsString);
                             coordinates = swapCoordinates(coordinates);
+                         console.log('Координаты после перестановки1111111:', coordinates);
 
                             const polygon = new ymaps.Polygon(coordinates, {}, {
                                 fillColor: color,
@@ -1222,14 +1227,18 @@ function showZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || zone.polygonVisible) return;
 
-    if (zone.polygons) {
+    if (zone.polygons && zone.polygons.length > 0) {
         zone.polygons.forEach(polygon => myMap.geoObjects.add(polygon));
+    } else {
+        console.warn(`У зоны '${zoneKey}' отсутствуют полигоны для отображения.`);
     }
+
     if (zone.label) {
         myMap.geoObjects.add(zone.label);
     }
     zone.polygonVisible = true;
 }
+
 
 
 
