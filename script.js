@@ -641,21 +641,15 @@ function displayPolygonsForOrderPrefix(prefix) {
 
 function generateOrderHTML(zoneName, groupName, subgroupName, orderName) {
     const subgroupSection = document.getElementById(`subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
-if (!subgroupSection) {
+    if (!subgroupSection) {
         console.warn(`Секция подгруппы отсутствует: subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}. Пропускаю создание ордера '${orderName}'.`);
-        return; // Прерываем выполнение, если секции нет
-    }
-
-    // Проверка наличия названия подгруппы
-    if (!subgroupName) {
-        console.warn(`Отсутствует название подгруппы для ордера '${orderName}' в группе '${groupName}' зоны '${zoneName}'`);
         return;
     }
 
     const orderDiv = document.createElement('div');
     orderDiv.className = 'order';
     orderDiv.innerHTML = `
-        <div class="accordion-header" id="order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}">
+        <div class="accordion-header hidden" id="order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}">
             <span class="order-title">${orderName}</span>
         </div>
         <div class="accordion-content hidden" id="order-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}">
@@ -663,30 +657,42 @@ if (!subgroupSection) {
     `;
     subgroupSection.appendChild(orderDiv);
 
-    // Установка обработчика для аккордеона ордера
     const orderHeader = document.getElementById(`order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`);
     const orderContent = document.getElementById(`order-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`);
-    // orderHeader.addEventListener('click', () => {
-    //     orderContent.classList.toggle('hidden');
-    //     const isExpanded = !orderContent.classList.contains('hidden');
-    //     toggleOrderObjects(zoneName, groupName, subgroupName, orderName, isExpanded);
-    // });
+
+    let isOrderExpanded = false; // Добавляем состояние для отслеживания открытия/закрытия
 
     orderHeader.addEventListener('click', () => {
-        // Скрыть/показать контент ордера
         orderContent.classList.toggle('hidden');
-    
-        // Отображение объектов ордера
-        const isExpanded = !orderContent.classList.contains('hidden');
-        toggleOrderObjects(zoneName, groupName, subgroupName, orderName, isExpanded);
-    
-        // Дополнительное: отображение полигонов по префиксу
-        if (isExpanded) {
+        isOrderExpanded = !orderContent.classList.contains('hidden');
+
+        if (isOrderExpanded) {
+            // Если элемент раскрыт, раскрываем остальные
+            const allHeaders = subgroupSection.querySelectorAll('.accordion-header.hidden');
+            allHeaders.forEach(header => header.classList.remove('hidden'));
+        } else {
+            // Если элемент свернут, скрываем остальные
+            const allHeaders = subgroupSection.querySelectorAll('.accordion-header:not(:first-child)');
+            allHeaders.forEach(header => header.classList.add('hidden'));
+        }
+
+        toggleOrderObjects(zoneName, groupName, subgroupName, orderName, isOrderExpanded);
+
+        // Отображение полигонов
+        if (isOrderExpanded) {
             displayPolygonsForOrderPrefix(orderName);
         }
     });
-    
+
+    // Гарантируем, что первый элемент остаётся видимым
+    const headers = subgroupSection.querySelectorAll('.accordion-header');
+    if (headers.length === 1) {
+        headers[0].classList.remove('hidden');
+    }
 }
+
+
+
 
 
 
@@ -968,7 +974,6 @@ function countGroupObjects(zoneKey, groupName) {
 
 function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     if (!subgroupName) {
-        // Если подгруппа отсутствует, пропускаем её создание
         console.warn(`Пропущено создание подгруппы: отсутствует название для группы '${groupName}' в зоне '${zoneName}'`);
         return;
     }
@@ -979,7 +984,6 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
         return;
     }
 
-    // Рассчитываем количество объектов в подгруппе
     const subgroup = zones[zoneName].groups[groupName].subgroups[subgroupName];
     let subgroupCount = (subgroup.objects && subgroup.objects.length) || 0;
 
@@ -1001,15 +1005,33 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     `;
     groupSection.appendChild(subgroupDiv);
 
-    // Установка обработчика для аккордеона подгруппы
     const subgroupHeader = document.getElementById(`subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
     const subgroupContent = document.getElementById(`subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
+
+    let isSubgroupExpanded = false; // Добавляем состояние для отслеживания открытия/закрытия
+
     subgroupHeader.addEventListener('click', () => {
-        subgroupContent.classList.toggle('hidden');
-        const isExpanded = !subgroupContent.classList.contains('hidden');
-        toggleSubgroupObjects(zoneName, groupName, subgroupName, isExpanded);
+        if (isSubgroupExpanded) {
+            // Скрываем все элементы при повторном клике
+            const headers = subgroupContent.querySelectorAll('.accordion-header');
+            headers.forEach(header => header.classList.add('hidden'));
+            subgroupContent.classList.add('hidden');
+        } else {
+            // Показываем только первый элемент
+            const headers = subgroupContent.querySelectorAll('.accordion-header');
+            headers.forEach((header, index) => {
+                header.classList.toggle('hidden', index > 0);
+            });
+            subgroupContent.classList.remove('hidden');
+        }
+
+        isSubgroupExpanded = !isSubgroupExpanded; // Инвертируем состояние
+        toggleSubgroupObjects(zoneName, groupName, subgroupName, isSubgroupExpanded);
     });
 }
+
+
+
 
 
 
