@@ -280,26 +280,31 @@ function flattenCoords(coords) {
     return flatCoords;
 }
 function swapCoordinates(coords) {
+    // Логируем входящие данные
+    console.log('Входящие данные:', coords);
+
+    // Проверяем, является ли coords массивом
     if (!Array.isArray(coords)) {
-        console.error('Ошибка: ожидается массив координат, получено:', coords);
-        return coords;
+        console.error('Ошибка: переданы некорректные данные. Ожидается массив, получено:', coords);
+        return coords; // Возвращаем данные без изменений
     }
 
-    if (Array.isArray(coords[0][0])) {
-        // Обрабатываем вложенные массивы (мультиполигон или полигон с контурами)
+    // Если первый элемент массива — это массив (вложенные координаты)
+    if (Array.isArray(coords[0])) {
+        // Рекурсивно обрабатываем каждый вложенный массив
         return coords.map(swapCoordinates);
     }
 
+    // Если массив содержит два числа (широту и долготу)
     if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-        // Обработка одиночной точки
+        // Меняем местами широту и долготу
         return [coords[1], coords[0]];
+    } else {
+        // Если структура данных не соответствует ожидаемой
+        console.error('Ошибка: неверный формат координат. Ожидается массив из двух чисел:', coords);
+        return coords; // Возвращаем данные без изменений
     }
-
-    console.error('Неожиданный формат координат:', coords);
-    return coords;
 }
-
-
 
 
 ///123123123
@@ -380,40 +385,33 @@ if (polygonCoordsStrings.length > 0) {
         let allCoordinates = [];
 
         polygonCoordsStrings.forEach(coordsString => {
-    try {
-        let coordinates = JSON.parse(coordsString);
-        console.log('Координаты до перестановки:', JSON.stringify(coordinates));
+            let coordinates = JSON.parse(coordsString);
+            console.log('Координаты до перестановки:', JSON.stringify(coordinates));
+            
+             coordinates = swapCoordinates(coordinates);
+            console.log('Координаты после перестановки:', JSON.stringify(coordinates));
 
-        // Меняем местами широту и долготу
-        coordinates = swapCoordinates(coordinates);
+            // Проверяем структуру координат
+            if (!Array.isArray(coordinates[0][0][0])) {
+                coordinates = [coordinates];
+            }
 
-        // Проверяем структуру координат
-        if (!Array.isArray(coordinates[0][0])) {
-            // Если это одиночный полигон, оборачиваем в массив
-            coordinates = [coordinates];
-        }
-
-        console.log('Координаты после нормализации:', JSON.stringify(coordinates));
-        allCoordinates.push(coordinates);
-    } catch (e) {
-        console.error(`Ошибка при парсинге координат полигона: ${e.message}`);
-    }
-});
-
+            allCoordinates.push(coordinates);
+        });
 
         // Создаём MultiPolygon
-zones[zoneKey].polygon = new ymaps.GeoObject({
-    geometry: {
-        type: 'MultiPolygon',
-        coordinates: allCoordinates, // Унифицированная структура
-    },
-    properties: {},
-}, {
-    fillColor: color,
-    strokeColor: '#333',
-    opacity: 0.6,
-    strokeWidth: 2,
-});
+        zones[zoneKey].polygon = new ymaps.GeoObject({
+            geometry: {
+                type: 'MultiPolygon',
+                coordinates: allCoordinates,
+            },
+            properties: {},
+        }, {
+            fillColor: color,
+            strokeColor: '#333',
+            opacity: 0.6,
+            strokeWidth: 2,
+        });
 
         // Вычисляем границы и центр для метки
         let flatCoords = [];
@@ -568,9 +566,6 @@ if (!zones[zoneKey].groups[group]) {
                     if (order && polygonCoordsString) {
                         try {
                             let coordinates = JSON.parse(polygonCoordsString);
-                         if (!Array.isArray(coordinates)) {
-        throw new Error('Неправильный формат координат');
-    }
                             coordinates = swapCoordinates(coordinates);
 
                             const polygon = new ymaps.Polygon(coordinates, {}, {
