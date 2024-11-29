@@ -32,7 +32,7 @@ const zoneMappings = {
 //     "46": "Уборка территории",
 //     "47": "Развитие территории",
 //     "48": "Благоустройство и озеленение",
-  
+
 // };
 
 function sanitizeId(name) {
@@ -282,19 +282,17 @@ function flattenCoords(coords) {
 function swapCoordinates(coords) {
     // Логируем входящие данные
     console.log('Входящие данные:', coords);
-
     // Проверяем, является ли coords массивом
     if (!Array.isArray(coords)) {
         console.error('Ошибка: переданы некорректные данные. Ожидается массив, получено:', coords);
         return coords; // Возвращаем данные без изменений
     }
-
     // Если первый элемент массива — это массив (вложенные координаты)
     if (Array.isArray(coords[0])) {
         // Рекурсивно обрабатываем каждый вложенный массив
         return coords.map(swapCoordinates);
+    } else {
     }
-
     // Если массив содержит два числа (широту и долготу)
     if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
         // Меняем местами широту и долготу
@@ -305,7 +303,6 @@ function swapCoordinates(coords) {
         return coords; // Возвращаем данные без изменений
     }
 }
-
 
 ///123123123
 
@@ -356,7 +353,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
 if (!zones[zoneKey]) {
     zones[zoneKey] = {
-        polygons: [], 
+        polygon: null,
         label: null,
         groups: {},
         isVisible: false,
@@ -369,79 +366,48 @@ if (!zones[zoneKey]) {
     generateZoneHTML(zoneKey, zoneDisplayName, color);
 
     // Парсинг координат полигона зоны
-   // Парсинг всех координат полигонов для зоны
-let polygonCoordsStrings = [];
-for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    let polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
+    let polygonCoordsString;
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
+        if (polygonCoordsString) {
+            break; // Нашли координаты, выходим из цикла
+        }
+    }
+
     if (polygonCoordsString) {
-        polygonCoordsStrings.push(polygonCoordsString);
-    }
-}
+        try {
+            let coordinates = JSON.parse(polygonCoordsString);
+            coordinates = swapCoordinates(coordinates);
 
-// После обработки и перестановки координат
-if (polygonCoordsStrings.length > 0) {
-    try {
-        let allCoordinates = [];
-
-        polygonCoordsStrings.forEach(coordsString => {
-            let coordinates = JSON.parse(coordsString);
-            console.log('Координаты до перестановки:', JSON.stringify(coordinates));
-            
-             coordinates = swapCoordinates(coordinates);
-            console.log('Координаты после перестановки:', JSON.stringify(coordinates));
-
-            // Проверяем структуру координат
-            if (!Array.isArray(coordinates[0][0][0])) {
-                coordinates = [coordinates];
-            }
-
-            allCoordinates.push(coordinates);
-        });
-
-        // Создаём MultiPolygon
-        zones[zoneKey].polygon = new ymaps.GeoObject({
-            geometry: {
-                type: 'MultiPolygon',
-                coordinates: allCoordinates,
-            },
-            properties: {},
-        }, {
-            fillColor: color,
-            strokeColor: '#333',
-            opacity: 0.6,
-            strokeWidth: 2,
-        });
-
-        // Вычисляем границы и центр для метки
-        let flatCoords = [];
-        allCoordinates.forEach(polygonCoords => {
-            polygonCoords.forEach(contour => {
-                contour.forEach(point => {
-                    flatCoords.push(point);
-                });
+            // Создаём полигон
+            zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
+                fillColor: color,
+                strokeColor: '#333',
+                opacity: 0.4,
             });
-        });
-        const bounds = ymaps.util.bounds.fromPoints(flatCoords);
-        const center = ymaps.util.bounds.getCenter(bounds);
 
-        zones[zoneKey].label = new ymaps.Placemark(center, {
-            iconCaption: zoneDisplayName,
-        }, {
-            preset: 'islands#blueCircleDotIconWithCaption',
-            iconCaptionMaxWidth: '200',
-            iconColor: color,
-        });
+            // Создаём метку
+            const flatCoords = flattenCoords(coordinates);
+            const bounds = ymaps.util.bounds.fromPoints(flatCoords);
+            const center = ymaps.util.bounds.getCenter(bounds);
 
-        console.log(`Полигоны успешно созданы для зоны '${zoneKey}'`);
-    } catch (e) {
-        console.error(`Ошибка при обработке координат полигонов для зоны ${zoneDisplayName}:`, e);
+            zones[zoneKey].label = new ymaps.Placemark(center, {
+                iconCaption: zoneName,
+            }, {
+                preset: 'islands#blueCircleDotIconWithCaption',
+                iconCaptionMaxWidth: '200',
+                iconColor: color,
+            });
+
+            console.log(`Полигон успешно создан для зоны '${zoneKey}'`);
+        } catch (e) {
+            console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
+        }
+    } else {
+        console.warn(`Координаты полигона не найдены для зоны '${zoneKey}'`);
     }
-} else {
-    console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
-
-
 
 // Обработка строк с данными объектов
 for (let i = 1; i < rows.length; i++) {
@@ -581,7 +547,34 @@ if (!zones[zoneKey].groups[group]) {
                         }
                     }
 
+                                if (polygonCoordsString) {
+                try {
+                    let coordinates = JSON.parse(polygonCoordsString);
+                    coordinates = swapCoordinates(coordinates);
 
+                    // Создаем полигон
+                    zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
+                        fillColor: color,
+                        strokeColor: '#333',
+                        opacity: 0.4,
+                    });
+
+                    // Создаем метку
+                    const flatCoords = flattenCoords(coordinates);
+                    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
+                    const center = ymaps.util.bounds.getCenter(bounds);
+
+                    zones[zoneKey].label = new ymaps.Placemark(center, {
+                        iconCaption: zoneName,
+                    }, {
+                        preset: 'islands#blueCircleDotIconWithCaption',
+                        iconCaptionMaxWidth: '200',
+                        iconColor: color,
+                    });
+                } catch (e) {
+                    console.error(`Ошибка при парсинге координат полигона для зоны ${zoneName}:`, e);
+                }
+            }
 
                     // Добавляем объект с меткой (и полигоном, если есть)
                     targetArray.push(objectData);
@@ -592,15 +585,14 @@ if (!zones[zoneKey].groups[group]) {
             }
 
             // Обновляем количество объектов в группах и подгруппах
-           updateGroupCounts(zoneKey);
+            updateGroupCounts(zoneKey);
 
             // Установка обработчиков для аккордеона
             setupAccordion(zoneKey);
-        }})
-        .catch(error => {
-            console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error);
-        });
+        })
+        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
 }
+
 
 
 
@@ -805,7 +797,7 @@ function generateGroupHTML(zoneKey, groupName) {
     const section = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
 if (!document.getElementById(`zone-content-${sanitizeId(zoneKey)}`)) {
     console.warn(`Секция зоны zone-content-${sanitizeId(zoneKey)} не существует. Создайте её перед добавлением групп.`);
-    
+
 }
 
     const groupDiv = document.createElement('div');
@@ -1217,8 +1209,8 @@ function showZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || zone.polygonVisible) return;
 
-    if (zone.polygons) {
-        zone.polygons.forEach(polygon => myMap.geoObjects.add(polygon));
+    if (zone.polygon) {
+        myMap.geoObjects.add(zone.polygon);
     }
     if (zone.label) {
         myMap.geoObjects.add(zone.label);
@@ -1229,20 +1221,18 @@ function showZonePolygon(zoneKey) {
 
 
 
-
 function hideZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || !zone.polygonVisible) return;
 
-    if (zone.polygons) {
-        zone.polygons.forEach(polygon => myMap.geoObjects.remove(polygon));
+    if (zone.polygon) {
+        myMap.geoObjects.remove(zone.polygon);
     }
     if (zone.label) {
         myMap.geoObjects.remove(zone.label);
     }
     zone.polygonVisible = false;
 }
-
 
 
 const controls = document.getElementById('controls');
