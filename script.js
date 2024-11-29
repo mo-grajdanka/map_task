@@ -373,10 +373,24 @@ if (!zones[zoneKey]) {
 let polygonCoordsStrings = [];
 for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    let polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
-    if (polygonCoordsString) {
+// Получаем значение из ячейки "Координаты полигона"
+let polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
+if (polygonCoordsString) {
+    // Проверяем, является ли это ссылкой на GeoJSON
+    if (isGeoJSONLink(polygonCoordsString)) {
+        // Если это ссылка, добавляем в массив ссылок
+        polygonGeoJSONLinks.push(polygonCoordsString);
+    } else {
+        // Иначе считаем, что это координаты, и добавляем в массив координат
         polygonCoordsStrings.push(polygonCoordsString);
     }
+}
+
+}
+
+ function isGeoJSONLink(str) {
+    
+    return str.startsWith('http') && str.endsWith('.geojson');
 }
 
 // После обработки и перестановки координат
@@ -399,19 +413,48 @@ if (polygonCoordsStrings.length > 0) {
             allCoordinates.push(coordinates);
         });
 
-        // Создаём MultiPolygon
-        zones[zoneKey].polygon = new ymaps.GeoObject({
-            geometry: {
-                type: 'MultiPolygon',
-                coordinates: allCoordinates,
-            },
-            properties: {},
-        }, {
-            fillColor: color,
-            strokeColor: '#333',
-            opacity: 0.6,
-            strokeWidth: 2,
+// Создаём объекты для каждого полигона
+allCoordinates.forEach(coordinates => {
+    var polygon = new ymaps.GeoObject({
+        geometry: {
+            type: 'Polygon',
+            coordinates: coordinates,
+        },
+        properties: {},
+    }, {
+        fillColor: color,
+        strokeColor: '#333',
+        opacity: 0.6,
+        strokeWidth: 2,
+    });
+
+    // Добавляем полигон в массив
+    zones[zoneKey].polygons.push(polygon);
+});
+
+// Обновляем центр и метку для зоны, если необходимо
+if (!zones[zoneKey].label) {
+    // Вычисляем границы и центр для метки
+    let flatCoords = [];
+    allCoordinates.forEach(polygonCoords => {
+        polygonCoords.forEach(contour => {
+            contour.forEach(point => {
+                flatCoords.push(point);
+            });
         });
+    });
+    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
+    const center = ymaps.util.bounds.getCenter(bounds);
+
+    zones[zoneKey].label = new ymaps.Placemark(center, {
+        iconCaption: zoneDisplayName,
+    }, {
+        preset: 'islands#blueCircleDotIconWithCaption',
+        iconCaptionMaxWidth: '200',
+        iconColor: color,
+    });
+}
+
 
         // Вычисляем границы и центр для метки
         let flatCoords = [];
@@ -441,6 +484,64 @@ if (polygonCoordsStrings.length > 0) {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
 
+// Обработка ссылок на GeoJSON файлы
+if (polygonGeoJSONLinks.length > 0) {
+    polygonGeoJSONLinks.forEach(link => {
+        loadAndProcessGeoJSON(link, zoneKey, color);
+    });
+}
+
+ function loadAndProcessGeoJSON(url, zoneKey, color) {
+    ymaps.geoJson.load(url)
+        .then(function (geoJson) {
+            // Инициализация объекта zones, если он еще не создан
+            if (!zones[zoneKey]) {
+                zones[zoneKey] = {
+                    polygons: [],
+                    labels: [],
+                    polygonVisible: false,
+                };
+            }
+
+            // Обходим каждый Feature в GeoJSON
+            geoJson.features.forEach(function (feature) {
+                var properties = feature.properties || {};
+                var zoneDisplayName = zones[zoneKey].zoneDisplayName || zoneKey;
+
+                // Создаем геообъект на основе данных из GeoJSON
+                var geoObject = new ymaps.GeoObject(feature, {
+                    fillColor: color,
+                    strokeColor: '#333',
+                    opacity: 0.6,
+                    strokeWidth: 2,
+                });
+
+                zones[zoneKey].polygons.push(geoObject);
+
+                // Вычисляем центр полигона для добавления метки
+                var bounds = geoObject.geometry.getBounds();
+                var center = [
+                    (bounds[0][0] + bounds[1][0]) / 2,
+                    (bounds[0][1] + bounds[1][1]) / 2
+                ];
+
+                var label = new ymaps.Placemark(center, {
+                    iconCaption: zoneDisplayName,
+                }, {
+                    preset: 'islands#blueCircleDotIconWithCaption',
+                    iconCaptionMaxWidth: '200',
+                    iconColor: color,
+                });
+
+                zones[zoneKey].labels.push(label);
+            });
+
+            console.log(`Полигоны из GeoJSON успешно загружены для зоны '${zoneKey}'.`);
+        })
+        .catch(function (error) {
+            console.error(`Ошибка при загрузке GeoJSON-файла по ссылке '${url}':`, error);
+        });
+}
 
 
 // Обработка строк с данными объектов
@@ -1220,11 +1321,14 @@ function showZonePolygon(zoneKey) {
     if (zone.polygons) {
         zone.polygons.forEach(polygon => myMap.geoObjects.add(polygon));
     }
-    if (zone.label) {
+    if (zone.labels) {
+        zone.labels.forEach(label => myMap.geoObjects.add(label));
+    } else if (zone.label) {
         myMap.geoObjects.add(zone.label);
     }
     zone.polygonVisible = true;
 }
+
 
 
 
@@ -1237,7 +1341,9 @@ function hideZonePolygon(zoneKey) {
     if (zone.polygons) {
         zone.polygons.forEach(polygon => myMap.geoObjects.remove(polygon));
     }
-    if (zone.label) {
+    if (zone.labels) {
+        zone.labels.forEach(label => myMap.geoObjects.remove(label));
+    } else if (zone.label) {
         myMap.geoObjects.remove(zone.label);
     }
     zone.polygonVisible = false;
