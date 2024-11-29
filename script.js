@@ -368,29 +368,15 @@ if (!zones[zoneKey]) {
     // Генерация HTML для зоны
     generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-
+    // Парсинг координат полигона зоны
    // Парсинг всех координат полигонов для зоны
 let polygonCoordsStrings = [];
-let polygonGeoJSONLinks = [];
 for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-// Получаем значение из ячейки "Координаты полигона"
-let polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
-if (polygonCoordsString) {
-    // Проверяем, является ли это ссылкой на GeoJSON
-    if (isGeoJSONLink(polygonCoordsString)) {
-        // Если это ссылка, добавляем в массив ссылок
-        polygonGeoJSONLinks.push(polygonCoordsString);
-    } else {
-        // Иначе считаем, что это координаты, и добавляем в массив координат
+    let polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
+    if (polygonCoordsString) {
         polygonCoordsStrings.push(polygonCoordsString);
     }
-}
-
-}
-
- function isGeoJSONLink(str) {
-    return str.trim().toLowerCase().endsWith('.geojson');
 }
 
 // После обработки и перестановки координат
@@ -413,48 +399,19 @@ if (polygonCoordsStrings.length > 0) {
             allCoordinates.push(coordinates);
         });
 
-// Создаём объекты для каждого полигона
-allCoordinates.forEach(coordinates => {
-    var polygon = new ymaps.GeoObject({
-        geometry: {
-            type: 'Polygon',
-            coordinates: coordinates,
-        },
-        properties: {},
-    }, {
-        fillColor: color,
-        strokeColor: '#333',
-        opacity: 0.6,
-        strokeWidth: 2,
-    });
-
-    // Добавляем полигон в массив
-    zones[zoneKey].polygons.push(polygon);
-});
-
-// Обновляем центр и метку для зоны, если необходимо
-if (!zones[zoneKey].label) {
-    // Вычисляем границы и центр для метки
-    let flatCoords = [];
-    allCoordinates.forEach(polygonCoords => {
-        polygonCoords.forEach(contour => {
-            contour.forEach(point => {
-                flatCoords.push(point);
-            });
+        // Создаём MultiPolygon
+        zones[zoneKey].polygon = new ymaps.GeoObject({
+            geometry: {
+                type: 'MultiPolygon',
+                coordinates: allCoordinates,
+            },
+            properties: {},
+        }, {
+            fillColor: color,
+            strokeColor: '#333',
+            opacity: 0.6,
+            strokeWidth: 2,
         });
-    });
-    const bounds = ymaps.util.bounds.fromPoints(flatCoords);
-    const center = ymaps.util.bounds.getCenter(bounds);
-
-    zones[zoneKey].label = new ymaps.Placemark(center, {
-        iconCaption: zoneDisplayName,
-    }, {
-        preset: 'islands#blueCircleDotIconWithCaption',
-        iconCaptionMaxWidth: '200',
-        iconColor: color,
-    });
-}
-
 
         // Вычисляем границы и центр для метки
         let flatCoords = [];
@@ -483,75 +440,6 @@ if (!zones[zoneKey].label) {
 } else {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
-
-// Обработка ссылок на GeoJSON файлы
-if (polygonGeoJSONLinks.length > 0) {
-    polygonGeoJSONLinks.forEach(link => {
-        loadAndProcessGeoJSON(link, zoneKey, color);
-    });
-}
-
-function loadAndProcessGeoJSON(url, zoneKey, color) {
-    const encodedUrl = encodeURI(url);
-
-    fetch(encodedUrl)
-        .then(response => response.json())
-        .then(geoJson => {
-            // Используем ymaps.geoQuery для обработки GeoJSON данных
-            const geoObjects = ymaps.geoQuery(geoJson);
-
-            // Устанавливаем стили для геообъектов
-            geoObjects.setOptions({
-                fillColor: color,
-                strokeColor: '#333',
-                opacity: 0.6,
-                strokeWidth: 2,
-            });
-
-            // Добавляем геообъекты на карту
-            geoObjects.addToMap(myMap);
-
-            // Инициализируем зону, если нужно
-            if (!zones[zoneKey]) {
-                zones[zoneKey] = {
-                    polygons: [],
-                    labels: [],
-                    polygonVisible: false,
-                    zoneDisplayName: zoneKey,
-                };
-            }
-
-            zones[zoneKey].polygons.push(geoObjects);
-
-            // Вычисляем границы геообъектов и центр для метки
-            const bounds = geoObjects.getBounds();
-
-            if (bounds) {
-                const center = [
-                    (bounds[0][0] + bounds[1][0]) / 2,
-                    (bounds[0][1] + bounds[1][1]) / 2,
-                ];
-
-                const label = new ymaps.Placemark(center, {
-                    iconCaption: zones[zoneKey].zoneDisplayName || zoneKey,
-                }, {
-                    preset: 'islands#blueCircleDotIconWithCaption',
-                    iconCaptionMaxWidth: '200',
-                    iconColor: color,
-                });
-
-                zones[zoneKey].labels.push(label);
-            } else {
-                console.warn(`Не удалось вычислить границы для зоны '${zoneKey}'.`);
-            }
-
-            console.log(`Полигоны из GeoJSON успешно загружены для зоны '${zoneKey}'.`);
-        })
-        .catch(error => {
-            console.error(`Ошибка при загрузке GeoJSON-файла по ссылке '${url}':`, error);
-        });
-}
-
 
 
 
@@ -1332,14 +1220,11 @@ function showZonePolygon(zoneKey) {
     if (zone.polygons) {
         zone.polygons.forEach(polygon => myMap.geoObjects.add(polygon));
     }
-    if (zone.labels) {
-        zone.labels.forEach(label => myMap.geoObjects.add(label));
-    } else if (zone.label) {
+    if (zone.label) {
         myMap.geoObjects.add(zone.label);
     }
     zone.polygonVisible = true;
 }
-
 
 
 
@@ -1352,9 +1237,7 @@ function hideZonePolygon(zoneKey) {
     if (zone.polygons) {
         zone.polygons.forEach(polygon => myMap.geoObjects.remove(polygon));
     }
-    if (zone.labels) {
-        zone.labels.forEach(label => myMap.geoObjects.remove(label));
-    } else if (zone.label) {
+    if (zone.label) {
         myMap.geoObjects.remove(zone.label);
     }
     zone.polygonVisible = false;
