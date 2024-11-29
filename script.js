@@ -389,8 +389,7 @@ if (polygonCoordsString) {
 }
 
  function isGeoJSONLink(str) {
-    
-    return str.startsWith('http') && str.endsWith('.geojson');
+    return str.trim().toLowerCase().endsWith('.geojson');
 }
 
 // После обработки и перестановки координат
