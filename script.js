@@ -118,7 +118,7 @@ takePhotoButton.addEventListener('click', () => {
             (position) => {
                 latitude = position.coords.latitude;
                 longitude = position.coords.longitude;
-                console.log(Обновлены координаты: Широта=${latitude}, Долгота=${longitude});
+                console.log(`Координаты для добавления: Широта=${latitude}, Долгота=${longitude}`);
                 capturePhoto();
             },
             (error) => {
@@ -218,7 +218,7 @@ savePhotoButton.addEventListener('click', () => {
 // Добавление геоданных в EXIF
 function addGeoDataToPhoto(blob) {
     console.log('Добавление геоданных в EXIF.');
-    console.log(Координаты для добавления: Широта=${latitude}, Долгота=${longitude});
+    console.log(`Координаты для добавления: Широта=${latitude}, Долгота=${longitude}`);
 
     const reader = new FileReader();
     reader.onload = function () {
@@ -419,7 +419,7 @@ if (polygonCoordsStrings.length > 0) {
             iconColor: color,
         });
 
-        console.log(Полигоны успешно созданы для зоны '${zoneKey}');
+        console.log(`Полигоны успешно созданы для зоны '${zoneKey}'`);
     } catch (e) {
         console.error(Ошибка при парсинге координат полигонов для зоны ${zoneDisplayName}:, e);
     }
