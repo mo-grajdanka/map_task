@@ -366,6 +366,7 @@ for (let i = 1; i < rows.length; i++) {
     }
 }
 
+// После обработки и перестановки координат
 if (polygonCoordsStrings.length > 0) {
     try {
         let allCoordinates = [];
@@ -376,34 +377,36 @@ if (polygonCoordsStrings.length > 0) {
             coordinates = swapCoordinates(coordinates);
             console.log('Координаты после перестановки:', JSON.stringify(coordinates));
 
-            // Добавляем уровень вложенности для контура полигона
-            // Если координаты представляют собой массив точек, оборачиваем их в массив контура
-            if (coordinates.length > 0 && !Array.isArray(coordinates[0][0])) {
-                coordinates = [coordinates]; // Добавляем уровень для контура
+            // Убедимся, что каждый полигон имеет правильную структуру
+            if (!Array.isArray(coordinates[0][0])) {
+                // Если это массив точек, оборачиваем его в массив контура
+                coordinates = [coordinates];
             }
 
+            // Добавляем полигон в общий массив
             allCoordinates.push(coordinates);
         });
 
-        // Создаём полигоны и сохраняем их в zones[zoneKey].polygons
-        zones[zoneKey].polygons = allCoordinates.map(coordinates => {
-
-    if (coordinates.length > 0 && typeof coordinates[0][0] === 'number') {
-        coordinates = [coordinates]; // Добавляем уровень вложенности для контура
-    }
-         
-            return new ymaps.Polygon(coordinates, {}, {
-                fillColor: color,
-                strokeColor: '#333',
-                opacity: 0.6,
-                strokeWidth: 2,
-            });
+        // Создаём один объект MultiPolygon
+        zones[zoneKey].polygon = new ymaps.GeoObject({
+            geometry: {
+                type: "MultiPolygon",
+                coordinates: allCoordinates,
+            },
+            properties: {},
+        }, {
+            fillColor: color,
+            strokeColor: '#333',
+            opacity: 0.6,
+            strokeWidth: 2,
         });
 
         // Вычисляем общие границы и центр для метки
         let flatCoords = [];
-        allCoordinates.forEach(coords => {
-            flatCoords = flatCoords.concat(flattenCoords(coords));
+        allCoordinates.forEach(polygonCoords => {
+            polygonCoords.forEach(contour => {
+                flatCoords = flatCoords.concat(contour);
+            });
         });
         const bounds = ymaps.util.bounds.fromPoints(flatCoords);
         const center = ymaps.util.bounds.getCenter(bounds);
@@ -423,6 +426,7 @@ if (polygonCoordsStrings.length > 0) {
 } else {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
+
 
 
 
@@ -1228,10 +1232,10 @@ function showZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || zone.polygonVisible) return;
 
-    if (zone.polygons && zone.polygons.length > 0) {
-        zone.polygons.forEach(polygon => myMap.geoObjects.add(polygon));
+    if (zone.polygon) {
+        myMap.geoObjects.add(zone.polygon);
     } else {
-        console.warn(`У зоны '${zoneKey}' отсутствуют полигоны для отображения.`);
+        console.warn(`У зоны '${zoneKey}' отсутствует полигон для отображения.`);
     }
 
     if (zone.label) {
@@ -1244,14 +1248,15 @@ function hideZonePolygon(zoneKey) {
     const zone = zones[zoneKey];
     if (!zone || !zone.polygonVisible) return;
 
-    if (zone.polygons && zone.polygons.length > 0) {
-        zone.polygons.forEach(polygon => myMap.geoObjects.remove(polygon));
+    if (zone.polygon) {
+        myMap.geoObjects.remove(zone.polygon);
     }
     if (zone.label) {
         myMap.geoObjects.remove(zone.label);
     }
     zone.polygonVisible = false;
 }
+
 
 
 
