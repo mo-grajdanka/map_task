@@ -492,21 +492,24 @@ if (polygonGeoJSONLinks.length > 0) {
 }
 
 function loadAndProcessGeoJSON(url, zoneKey, color) {
-    fetch(url)
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(function (geoJson) {
-            // Создаём геообъект из GeoJSON данных
-            var geoObject = new ymaps.GeoObject(geoJson, {
+    const encodedUrl = encodeURI(url);
+
+    fetch(encodedUrl)
+        .then(response => response.json())
+        .then(geoJson => {
+            // Используем ymaps.geoQuery для обработки GeoJSON данных
+            const geoObjects = ymaps.geoQuery(geoJson);
+
+            // Устанавливаем стили для геообъектов
+            geoObjects.setOptions({
                 fillColor: color,
                 strokeColor: '#333',
                 opacity: 0.6,
                 strokeWidth: 2,
             });
+
+            // Добавляем геообъекты на карту
+            geoObjects.addToMap(myMap);
 
             // Инициализируем зону, если нужно
             if (!zones[zoneKey]) {
@@ -514,34 +517,41 @@ function loadAndProcessGeoJSON(url, zoneKey, color) {
                     polygons: [],
                     labels: [],
                     polygonVisible: false,
+                    zoneDisplayName: zoneKey,
                 };
             }
 
-            zones[zoneKey].polygons.push(geoObject);
+            zones[zoneKey].polygons.push(geoObjects);
 
-            // Вычисляем центр полигона для метки
-            var bounds = geoObject.geometry.getBounds();
-            var center = [
-                (bounds[0][0] + bounds[1][0]) / 2,
-                (bounds[0][1] + bounds[1][1]) / 2
-            ];
+            // Вычисляем границы геообъектов и центр для метки
+            const bounds = geoObjects.getBounds();
 
-            var label = new ymaps.Placemark(center, {
-                iconCaption: zones[zoneKey].zoneDisplayName || zoneKey,
-            }, {
-                preset: 'islands#blueCircleDotIconWithCaption',
-                iconCaptionMaxWidth: '200',
-                iconColor: color,
-            });
+            if (bounds) {
+                const center = [
+                    (bounds[0][0] + bounds[1][0]) / 2,
+                    (bounds[0][1] + bounds[1][1]) / 2,
+                ];
 
-            zones[zoneKey].labels.push(label);
+                const label = new ymaps.Placemark(center, {
+                    iconCaption: zones[zoneKey].zoneDisplayName || zoneKey,
+                }, {
+                    preset: 'islands#blueCircleDotIconWithCaption',
+                    iconCaptionMaxWidth: '200',
+                    iconColor: color,
+                });
+
+                zones[zoneKey].labels.push(label);
+            } else {
+                console.warn(`Не удалось вычислить границы для зоны '${zoneKey}'.`);
+            }
 
             console.log(`Полигоны из GeoJSON успешно загружены для зоны '${zoneKey}'.`);
         })
-        .catch(function (error) {
+        .catch(error => {
             console.error(`Ошибка при загрузке GeoJSON-файла по ссылке '${url}':`, error);
         });
 }
+
 
 
 
