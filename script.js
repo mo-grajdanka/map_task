@@ -368,9 +368,10 @@ if (!zones[zoneKey]) {
     // Генерация HTML для зоны
     generateZoneHTML(zoneKey, zoneDisplayName, color);
 
-    // Парсинг координат полигона зоны
+
    // Парсинг всех координат полигонов для зоны
 let polygonCoordsStrings = [];
+let polygonGeoJSONLinks = [];
 for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
 // Получаем значение из ячейки "Координаты полигона"
