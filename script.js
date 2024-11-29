@@ -387,6 +387,11 @@ if (polygonCoordsStrings.length > 0) {
 
         // Создаём полигоны и сохраняем их в zones[zoneKey].polygons
         zones[zoneKey].polygons = allCoordinates.map(coordinates => {
+
+    if (coordinates.length > 0 && typeof coordinates[0][0] === 'number') {
+        coordinates = [coordinates]; // Добавляем уровень вложенности для контура
+    }
+         
             return new ymaps.Polygon(coordinates, {}, {
                 fillColor: color,
                 strokeColor: '#333',
