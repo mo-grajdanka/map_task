@@ -379,33 +379,54 @@ for (let i = 1; i < rows.length; i++) {
     }
 }
 
+// После обработки и перестановки координат
 if (polygonCoordsStrings.length > 0) {
     try {
         let allCoordinates = [];
 
         polygonCoordsStrings.forEach(coordsString => {
             let coordinates = JSON.parse(coordsString);
-            coordinates = swapCoordinates(coordinates);
+            console.log('Координаты до перестановки:', JSON.stringify(coordinates));
+            // Если необходимо, вызываем swapCoordinates
+            // coordinates = swapCoordinates(coordinates);
+            console.log('Координаты после перестановки:', JSON.stringify(coordinates));
+
+            // Проверяем структуру координат
+            if (!Array.isArray(coordinates[0][0][0])) {
+                coordinates = [coordinates];
+            }
+
             allCoordinates.push(coordinates);
         });
 
-        // Создаём массив полигонов
-        zones[zoneKey].polygons = allCoordinates.map(coordinates => new ymaps.Polygon(coordinates, {}, {
+        // Создаём MultiPolygon
+        zones[zoneKey].polygon = new ymaps.GeoObject({
+            geometry: {
+                type: 'MultiPolygon',
+                coordinates: allCoordinates,
+            },
+            properties: {},
+        }, {
             fillColor: color,
             strokeColor: '#333',
-            opacity: 0.4,
-        }));
+            opacity: 0.6,
+            strokeWidth: 2,
+        });
 
-        // Вычисляем границы и центр
+        // Вычисляем границы и центр для метки
         let flatCoords = [];
-        allCoordinates.forEach(coords => {
-            flatCoords = flatCoords.concat(flattenCoords(coords));
+        allCoordinates.forEach(polygonCoords => {
+            polygonCoords.forEach(contour => {
+                contour.forEach(point => {
+                    flatCoords.push(point);
+                });
+            });
         });
         const bounds = ymaps.util.bounds.fromPoints(flatCoords);
         const center = ymaps.util.bounds.getCenter(bounds);
 
         zones[zoneKey].label = new ymaps.Placemark(center, {
-            iconCaption: zoneName,
+            iconCaption: zoneDisplayName,
         }, {
             preset: 'islands#blueCircleDotIconWithCaption',
             iconCaptionMaxWidth: '200',
@@ -414,11 +435,12 @@ if (polygonCoordsStrings.length > 0) {
 
         console.log(`Полигоны успешно созданы для зоны '${zoneKey}'`);
     } catch (e) {
-        console.error(`Ошибка при парсинге координат полигонов для зоны ${zoneName}:`, e);
+        console.error(`Ошибка при обработке координат полигонов для зоны ${zoneDisplayName}:`, e);
     }
 } else {
     console.warn(`Координаты полигонов не найдены для зоны '${zoneKey}'`);
 }
+
 
 
 // Обработка строк с данными объектов
