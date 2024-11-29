@@ -597,13 +597,14 @@ if (!zones[zoneKey].groups[group]) {
             }
 
             // Обновляем количество объектов в группах и подгруппах
-            updateGroupCounts(zoneKey);
+           updateGroupCounts(zoneKey);
 
-            // Установка обработчиков для аккордеона
-            setupAccordion(zoneKey);
-        })
-        .catch(error => console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error));
-}
+        // Установка обработчиков для аккордеона
+        setupAccordion(zoneKey);
+    })
+    .catch(error => {
+        console.error(`Ошибка при загрузке данных с листа ${sheetName}:`, error);
+    });
 
 
 
