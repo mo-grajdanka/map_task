@@ -280,31 +280,19 @@ function flattenCoords(coords) {
     return flatCoords;
 }
 function swapCoordinates(coords) {
-    // Логируем входящие данные
-    console.log('Входящие данные:', coords);
-
-    // Проверяем, является ли coords массивом
-    if (!Array.isArray(coords)) {
-        console.error('Ошибка: переданы некорректные данные. Ожидается массив, получено:', coords);
-        return coords; // Возвращаем данные без изменений
-    }
-
-    // Если первый элемент массива — это массив (вложенные координаты)
-    if (Array.isArray(coords[0])) {
-        // Рекурсивно обрабатываем каждый вложенный массив
-        return coords.map(swapCoordinates);
-    }
-
-    // Если массив содержит два числа (широту и долготу)
-    if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-        // Меняем местами широту и долготу
-        return [coords[1], coords[0]];
+    if (Array.isArray(coords)) {
+        if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+            // Если это пара координат, меняем местами
+            return [coords[1], coords[0]];
+        } else {
+            // Иначе рекурсивно обрабатываем вложенные массивы
+            return coords.map(swapCoordinates);
+        }
     } else {
-        // Если структура данных не соответствует ожидаемой
-        console.error('Ошибка: неверный формат координат. Ожидается массив из двух чисел:', coords);
-        return coords; // Возвращаем данные без изменений
+        return coords;
     }
 }
+
 
 
 ///123123123
