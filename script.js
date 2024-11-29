@@ -357,7 +357,6 @@ if (!zones[zoneKey]) {
     generateZoneHTML(zoneKey, zoneDisplayName, color);
 
     // Парсинг координат полигона зоны
-   // Парсинг всех координат полигонов для зоны
 let polygonCoordsStrings = [];
 for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
@@ -376,6 +375,13 @@ if (polygonCoordsStrings.length > 0) {
             console.log('Координаты до перестановки:', JSON.stringify(coordinates));
             coordinates = swapCoordinates(coordinates);
             console.log('Координаты после перестановки:', JSON.stringify(coordinates));
+
+            // Добавляем уровень вложенности для контура полигона
+            // Если координаты представляют собой массив точек, оборачиваем их в массив контура
+            if (coordinates.length > 0 && !Array.isArray(coordinates[0][0])) {
+                coordinates = [coordinates]; // Добавляем уровень для контура
+            }
+
             allCoordinates.push(coordinates);
         });
 
