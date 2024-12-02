@@ -35,6 +35,16 @@ const zoneMappings = {
 
 // };
 
+const orderColors = {
+    1: '#FFC0CB', // Розовый
+    2: '#FFFF00', // Желтый
+    3: '#008000', // Зеленый
+    4: '#00FFFF', // Голубой
+    5: '#800080', // Фиолетовый
+    6: '#FFA500', // Оранжевый
+    7: '#808080'  // Серый
+};
+
 function sanitizeId(name) {
     return name ? name.replace(/\s+/g, '_').replace(/[^\p{L}\d\-_]/gu, '') : '';
 }
@@ -281,7 +291,7 @@ function flattenCoords(coords) {
 }
 function swapCoordinates(coords) {
     // Логируем входящие данные
-    console.log('Входящие данные:', coords);
+  //   console.log('Входящие данные:', coords);
     // Проверяем, является ли coords массивом
     if (!Array.isArray(coords)) {
         console.error('Ошибка: переданы некорректные данные. Ожидается массив, получено:', coords);
@@ -383,8 +393,8 @@ if (!zones[zoneKey]) {
             // Создаём полигон
             zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
                 fillColor: color,
-                strokeColor: '#333',
-                opacity: 0.4,
+                strokeColor: '#800000',
+                opacity: 0.7,
             });
 
             // Создаём метку
@@ -430,7 +440,7 @@ for (let i = 1; i < rows.length; i++) {
                 const secondDateLink = getRowValue(row, indices, 'secondDateLink');
                 const description = getRowValue(row, indices, 'description');
                 const ordersCell = getRowValue(row, indices, 'orders');
-                const extraButton = getRowValue(row, indices, 'extraButton');
+               // const extraButton = getRowValue(row, indices, 'extraButton');
                 const polygonCoordsString = getRowValue(row, indices, 'polygonCoords');
 
                 // Проверка и преобразование данных
@@ -529,23 +539,30 @@ if (!zones[zoneKey].groups[group]) {
                     const objectData = { id, placemark };
 
                     // Обработка полигонов для ордера
-                    if (order && polygonCoordsString) {
-                        try {
-                            let coordinates = JSON.parse(polygonCoordsString);
-                            coordinates = swapCoordinates(coordinates);
+// Обработка полигонов для ордера
+if (order && polygonCoordsString) {
+    try {
+        let coordinates = JSON.parse(polygonCoordsString);
+        coordinates = swapCoordinates(coordinates);
 
-                            const polygon = new ymaps.Polygon(coordinates, {}, {
-                                fillColor: color,
-                                strokeColor: '#333',
-                                opacity: 0.4,
-                            });
+        
+        const orderNumber = parseInt(order, 10);
+        
+        const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
 
-                            objectData.polygon = polygon; // Сохраняем полигон в объекте
+        const polygon = new ymaps.Polygon(coordinates, {}, {
+            fillColor: orderColor,
+            strokeColor: '#333',
+            opacity: 0.7,
+        });
 
-                        } catch (e) {
-                            console.error(`Ошибка при создании полигона для зоны '${zoneKey}':`, e);
-                        }
-                    }
+        objectData.polygon = polygon; // Сохраняем полигон в объекте
+
+    } catch (e) {
+        console.error(`Ошибка при создании полигона для зоны '${zoneKey}':`, e);
+    }
+}
+
 
                                 if (polygonCoordsString) {
                 try {
@@ -556,7 +573,7 @@ if (!zones[zoneKey].groups[group]) {
                     zones[zoneKey].polygon = new ymaps.Polygon(coordinates, {}, {
                         fillColor: color,
                         strokeColor: '#333',
-                        opacity: 0.4,
+                        opacity: 0.7,
                     });
 
                     // Создаем метку
@@ -594,58 +611,65 @@ if (!zones[zoneKey].groups[group]) {
 }
 
 
-function displayPolygonsForOrderPrefix(prefix) {
-    // Удаляем все полигоны перед добавлением новых
-    myMap.geoObjects.removeAll();
+// function displayPolygonsForOrderPrefix(prefix) {
+//     // Удаляем все полигоны перед добавлением новых
+//     myMap.geoObjects.removeAll();
 
-    // Найти все полигоны для ордеров, начинающихся с заданного префикса
-    const zone = zones["Ордера"]; // Убедитесь, что "Ордера" — это ключ вашей зоны
-    if (!zone) {
-        console.error("Зона 'Ордера' не найдена.");
-        return;
-    }
+//     // Найти все полигоны для ордеров, начинающихся с заданного префикса
+//     const zone = zones["Ордера"]; 
+//     if (!zone) {
+//         console.error("Зона 'Ордера' не найдена.");
+//         return;
+//     }
 
-    Object.keys(zone.groups).forEach(groupName => {
-        const group = zone.groups[groupName];
+//     Object.keys(zone.groups).forEach(groupName => {
+//         const group = zone.groups[groupName];
 
-        // Проверяем подгруппы
-        Object.keys(group.subgroups).forEach(subgroupName => {
-            const subgroup = group.subgroups[subgroupName];
+//         // Проверяем подгруппы
+//         Object.keys(group.subgroups).forEach(subgroupName => {
+//             const subgroup = group.subgroups[subgroupName];
 
-            // Перебираем ордера внутри подгруппы
-            Object.keys(subgroup.orders).forEach(orderName => {
-                if (orderName.startsWith(prefix)) { // Проверяем, начинается ли ордер с префикса
-                    subgroup.orders[orderName].forEach(obj => {
-                        if (obj.polygon) {
-                            myMap.geoObjects.add(obj.polygon);
-                        }
-                    });
-                }
-            });
-        });
+//             // Перебираем ордера внутри подгруппы
+//             Object.keys(subgroup.orders).forEach(orderName => {
+//                 if (orderName.startsWith(prefix)) { // Проверяем, начинается ли ордер с префикса
+//                     subgroup.orders[orderName].forEach(obj => {
+//                         if (obj.polygon) {
+//                             myMap.geoObjects.add(obj.polygon);
+//                         }
+//                     });
+//                 }
+//             });
+//         });
 
-        // Проверяем ордера на уровне группы
-        Object.keys(group.orders).forEach(orderName => {
-            if (orderName.startsWith(prefix)) { // Проверяем, начинается ли ордер с префикса
-                group.orders[orderName].forEach(obj => {
-                    if (obj.polygon) {
-                        myMap.geoObjects.add(obj.polygon);
-                    }
-                });
-            }
-        });
-    });
-}
+//         // Проверяем ордера на уровне группы
+//         Object.keys(group.orders).forEach(orderName => {
+//             if (orderName.startsWith(prefix)) { // Проверяем, начинается ли ордер с префикса
+//                 group.orders[orderName].forEach(obj => {
+//                     if (obj.polygon) {
+//                         myMap.geoObjects.add(obj.polygon);
+//                     }
+//                 });
+//             }
+//         });
+//     });
+// }
 
 
 
 function generateOrderHTML(zoneName, groupName, subgroupName, orderName) {
-    const subgroupSection = document.getElementById(`subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
+    // Находим секцию подгруппы
+    const subgroupSection = document.getElementById(
+        `subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`
+    );
+
     if (!subgroupSection) {
-        console.warn(`Секция подгруппы отсутствует: subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}. Пропускаю создание ордера '${orderName}'.`);
+        console.warn(
+            `Секция подгруппы отсутствует: subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}. Пропускаю создание ордера '${orderName}'.`
+        );
         return;
     }
 
+    // Создаем HTML-структуру для ордера
     const orderDiv = document.createElement('div');
     orderDiv.className = 'order';
     orderDiv.innerHTML = `
@@ -657,39 +681,57 @@ function generateOrderHTML(zoneName, groupName, subgroupName, orderName) {
     `;
     subgroupSection.appendChild(orderDiv);
 
-    const orderHeader = document.getElementById(`order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`);
-    const orderContent = document.getElementById(`order-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`);
+    // Получаем элементы заголовка и контента
+    const orderHeader = document.getElementById(
+        `order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`
+    );
+    const orderContent = document.getElementById(
+        `order-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`
+    );
 
-    let isOrderExpanded = false; // Добавляем состояние для отслеживания открытия/закрытия
+    if (!orderHeader || !orderContent) {
+        console.error(
+            `Ошибка: не удалось найти элементы заголовка или контента для ордера '${orderName}'. Проверьте структуру HTML.`
+        );
+        return;
+    }
 
+    // Переменная для отслеживания состояния ордера
+    let isOrderExpanded = false;
+
+    // Обработчик клика по заголовку ордера
     orderHeader.addEventListener('click', () => {
+        console.log(`Клик по заголовку ордера: ${orderName}`);
+
+        // Переключение видимости текущего контента
         orderContent.classList.toggle('hidden');
         isOrderExpanded = !orderContent.classList.contains('hidden');
+        console.log(`Состояние ордера '${orderName}': ${isOrderExpanded ? 'раскрыт' : 'свернут'}`);
 
-        if (isOrderExpanded) {
-            // Если элемент раскрыт, раскрываем остальные
-            const allHeaders = subgroupSection.querySelectorAll('.accordion-header.hidden');
-            allHeaders.forEach(header => header.classList.remove('hidden'));
-        } else {
-            // Если элемент свернут, скрываем остальные
-            const allHeaders = subgroupSection.querySelectorAll('.accordion-header:not(:first-child)');
-            allHeaders.forEach(header => header.classList.add('hidden'));
-        }
+        // Снятие hidden со всех заголовков внутри подгруппы
+        const allHeaders = subgroupSection.querySelectorAll('.accordion-header');
+        console.log(`Найдено ${allHeaders.length} элементов`);
+        allHeaders.forEach((header) => {
+            console.log(`Обрабатывается элемент: ${header.tagName}`);
+            header.classList.remove('hidden');
+        });
 
+        // Логика отображения/скрытия объектов
         toggleOrderObjects(zoneName, groupName, subgroupName, orderName, isOrderExpanded);
 
-        // Отображение полигонов
-        if (isOrderExpanded) {
-            displayPolygonsForOrderPrefix(orderName);
+        // Логика отображения/скрытия полигонов
+        if (!isOrderExpanded) {
+            console.log(`Полигоны для '${orderName}' скрыты.`);
         }
     });
 
-    // Гарантируем, что первый элемент остаётся видимым
+    // Снятие hidden со всех заголовков после инициализации
     const headers = subgroupSection.querySelectorAll('.accordion-header');
-    if (headers.length === 1) {
-        headers[0].classList.remove('hidden');
-    }
+    headers.forEach((header) => header.classList.remove('hidden'));
 }
+
+
+
 
 
 
@@ -747,8 +789,30 @@ function init() {
     myMap = new ymaps.Map("map", { center: initialCenter, zoom: initialZoom });
 
     const colors = [
-        '#FFA50088', '#4682B488', '#32CD32', '#1E90FF'
+        '#FFA50088', // Оранжевый
+        '#4682B488', // Синий стальной
+        '#32CD32',   // Зеленый лаймовый
+        '#1E90FF',   // Голубой Доджера
+        '#FF634788', // Кораловый
+        '#9400D388', // Темный фиолетовый
+        '#FFD70088', // Золотой
+        '#00808088', // Бирюзовый
+        '#DC143C88', // Малиновый
+        '#7B68EE88', // Средний голубой
+        '#8B451388', // Седло-коричневый
+        '#00CED188', // Темный бирюзовый
+        '#ADFF2F88', // Желто-зеленый
+        '#FF450088', // Оранжево-красный
+        '#8A2BE288', // Сине-фиолетовый
+        '#5F9EA088', // Лазурный
+        '#9932CC88', // Темно-орхидеевый
+        '#FF8C0088', // Темно-оранжевый
+        '#3CB37188', // Морской зеленый
+        '#6A5ACD88'  // Темный васильковый
     ];
+
+
+    
 
     let zoneKeys = Object.keys(zoneMappings); // ["Зона 1", "Зона 2", "Зона 3", "Зона 4"]
 
@@ -1005,29 +1069,60 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
     `;
     groupSection.appendChild(subgroupDiv);
 
-    const subgroupHeader = document.getElementById(`subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
-    const subgroupContent = document.getElementById(`subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`);
 
-    let isSubgroupExpanded = false; // Добавляем состояние для отслеживания открытия/закрытия
 
-    subgroupHeader.addEventListener('click', () => {
-        if (isSubgroupExpanded) {
-            // Скрываем все элементы при повторном клике
-            const headers = subgroupContent.querySelectorAll('.accordion-header');
-            headers.forEach(header => header.classList.add('hidden'));
-            subgroupContent.classList.add('hidden');
-        } else {
-            // Показываем только первый элемент
-            const headers = subgroupContent.querySelectorAll('.accordion-header');
-            headers.forEach((header, index) => {
-                header.classList.toggle('hidden', index > 0);
-            });
-            subgroupContent.classList.remove('hidden');
-        }
 
-        isSubgroupExpanded = !isSubgroupExpanded; // Инвертируем состояние
-        toggleSubgroupObjects(zoneName, groupName, subgroupName, isSubgroupExpanded);
-    });
+
+
+const subgroupHeader = document.getElementById(
+    `subgroup-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`
+);
+const subgroupContent = document.getElementById(
+    `subgroup-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}`
+);
+
+if (!subgroupHeader || !subgroupContent) {
+    console.error(
+        `Ошибка: не удалось найти элементы subgroupHeader или subgroupContent для подгруппы '${subgroupName}'. Проверьте структуру HTML.`
+    );
+    return;
+}
+
+let isSubgroupExpanded = false; // Отслеживание состояния открытия/закрытия
+
+subgroupHeader.addEventListener('click', () => {
+    console.log(`Клик по заголовку подгруппы: ${subgroupName}`);
+
+    // Логируем содержимое subgroupContent
+    console.log('Элементы внутри subgroupContent:', subgroupContent.innerHTML);
+
+    // Переключаем состояние
+    if (isSubgroupExpanded) {
+        // Скрываем все заголовки внутри подгруппы
+        const headers = subgroupContent.querySelectorAll('.accordion-header');
+        headers.forEach((header) => {
+            header.classList.add('hidden');
+            console.log(`Скрыт заголовок: ${header.id}`);
+        });
+
+        subgroupContent.classList.add('hidden');
+        console.log(`Подгруппа '${subgroupName}' скрыта.`);
+    } else {
+        // Показываем все заголовки внутри подгруппы
+        const headers = subgroupContent.querySelectorAll('.accordion-header');
+        headers.forEach((header) => {
+            header.classList.remove('hidden');
+            console.log(`Показан заголовок: ${header.id}`);
+        });
+
+        subgroupContent.classList.remove('hidden');
+        console.log(`Подгруппа '${subgroupName}' раскрыта.`);
+    }
+
+    isSubgroupExpanded = !isSubgroupExpanded; // Инвертируем состояние
+    toggleSubgroupObjects(zoneName, groupName, subgroupName, isSubgroupExpanded);
+});
+
 }
 
 
@@ -1505,3 +1600,5 @@ function openSlider(folderName) {
     // Начать загрузку изображений
     loadImages();
 }
+
+
