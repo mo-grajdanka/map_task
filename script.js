@@ -1090,38 +1090,83 @@ if (!subgroupHeader || !subgroupContent) {
 
 let isSubgroupExpanded = false; // Отслеживание состояния открытия/закрытия
 
+
 subgroupHeader.addEventListener('click', () => {
-    console.log(`Клик по заголовку подгруппы: ${subgroupName}`);
+    // Переключаем состояние подгруппы
+    subgroupContent.classList.toggle('hidden');
+    isSubgroupExpanded = !subgroupContent.classList.contains('hidden');
 
-    // Логируем содержимое subgroupContent
-    console.log('Элементы внутри subgroupContent:', subgroupContent.innerHTML);
+    // Раскрываем или скрываем все ордера в подгруппе
+    toggleSubgroupOrders(zoneName, groupName, subgroupName, isSubgroupExpanded);
 
-    // Переключаем состояние
-    if (isSubgroupExpanded) {
-        // Скрываем все заголовки внутри подгруппы
-        const headers = subgroupContent.querySelectorAll('.accordion-header');
-        headers.forEach((header) => {
-            header.classList.add('hidden');
-            console.log(`Скрыт заголовок: ${header.id}`);
-        });
-
-        subgroupContent.classList.add('hidden');
-        console.log(`Подгруппа '${subgroupName}' скрыта.`);
-    } else {
-        // Показываем все заголовки внутри подгруппы
-        const headers = subgroupContent.querySelectorAll('.accordion-header');
-        headers.forEach((header) => {
-            header.classList.remove('hidden');
-            console.log(`Показан заголовок: ${header.id}`);
-        });
-
-        subgroupContent.classList.remove('hidden');
-        console.log(`Подгруппа '${subgroupName}' раскрыта.`);
-    }
-
-    isSubgroupExpanded = !isSubgroupExpanded; // Инвертируем состояние
+    // Отображаем или скрываем все полигоны и метки
     toggleSubgroupObjects(zoneName, groupName, subgroupName, isSubgroupExpanded);
 });
+
+function toggleSubgroupOrders(zoneName, groupName, subgroupName, show) {
+    const subgroup = zones[zoneName].groups[groupName].subgroups[subgroupName];
+    if (!subgroup) return;
+
+    for (let orderName in subgroup.orders) {
+        const orderHeader = document.getElementById(
+            `order-header-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`
+        );
+        const orderContent = document.getElementById(
+            `order-content-${sanitizeId(zoneName)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}`
+        );
+
+        if (orderHeader && orderContent) {
+            if (show) {
+                orderContent.classList.remove('hidden');
+                orderHeader.classList.remove('hidden');
+            } else {
+                orderContent.classList.add('hidden');
+                orderHeader.classList.add('hidden');
+            }
+        }
+    }
+}
+
+function toggleSubgroupObjects(zoneName, groupName, subgroupName, show) {
+    const zone = zones[zoneName];
+    if (!zone || !zone.groups[groupName]) return;
+
+    const subgroup = zone.groups[groupName].subgroups[subgroupName];
+    if (!subgroup) return;
+
+    // Отображение или скрытие объектов внутри подгруппы
+    subgroup.objects.forEach((obj) => {
+        if (show) {
+            myMap.geoObjects.add(obj.placemark);
+            if (obj.polygon) {
+                myMap.geoObjects.add(obj.polygon);
+            }
+        } else {
+            myMap.geoObjects.remove(obj.placemark);
+            if (obj.polygon) {
+                myMap.geoObjects.remove(obj.polygon);
+            }
+        }
+    });
+
+    // Отображение или скрытие объектов в ордерах
+    for (let orderName in subgroup.orders) {
+        const orderObjects = subgroup.orders[orderName];
+        orderObjects.forEach((obj) => {
+            if (show) {
+                myMap.geoObjects.add(obj.placemark);
+                if (obj.polygon) {
+                    myMap.geoObjects.add(obj.polygon);
+                }
+            } else {
+                myMap.geoObjects.remove(obj.placemark);
+                if (obj.polygon) {
+                    myMap.geoObjects.remove(obj.polygon);
+                }
+            }
+        });
+    }
+}
 
 }
 
