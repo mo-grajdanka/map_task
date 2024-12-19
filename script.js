@@ -548,7 +548,8 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
                             const orderNumber = parseInt(order, 10);
 
-                            const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
+                          //  const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
+                            const orderColor = isNaN(orderNumber) ? '#FF0000' : (orderColors[orderNumber] || '#FF0000');
 
                             const polygon = new ymaps.Polygon(coordinates, {}, {
                                 fillColor: orderColor,
