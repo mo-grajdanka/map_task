@@ -539,7 +539,6 @@ function fetchZoneData(zoneKey, sheetName, color) {
                     const objectData = { id, placemark };
 
                     // Обработка полигонов для ордера
-                    // Обработка полигонов для ордера
                     if (order && polygonCoordsString) {
                         try {
                             let coordinates = JSON.parse(polygonCoordsString);
@@ -547,25 +546,36 @@ function fetchZoneData(zoneKey, sheetName, color) {
 
 
                             const orderNumber = parseInt(order, 10);
-
-                          //  const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
-                            const orderColor = isNaN(orderNumber) ? '#FF0000' : (orderColors[orderNumber] || '#FF0000');
-
-                            // const polygon = new ymaps.Polygon(coordinates, {}, {
-                            //     fillColor: orderColor,
-                            //     strokeColor: '#333',
-                            //     opacity: 0.7,
-                            // });
-
-const polygon = new ymaps.Polygon(coordinates, {}, {
-    fillColor: orderColor,    // Заливка, но её прозрачность будет 0
-    strokeColor: '#FF0000',   // Четкая красная граница
-    strokeWidth: 3,           // Толщина границы 
-    strokeOpacity: 1,         // Полная непрозрачность границы
-    fillOpacity: 0            // Убирает заливку
-});
-
-                            objectData.polygon = polygon; // Сохраняем полигон в объекте
+                            let fillColor, strokeColor, strokeWidth, strokeOpacity, fillOpacity;
+                            
+                            // Проверка, есть ли номер ордера
+                            if (isNaN(orderNumber)) {
+                                // Если ордер без номера
+                                fillColor = '#FF0000';    // Заливка для отсутствующих номеров
+                                strokeColor = '#FF0000';  // Четкая красная граница
+                                strokeWidth = 3;
+                                strokeOpacity = 1;        // Полная непрозрачность границы
+                                fillOpacity = 0;          // Прозрачная заливка
+                            } else {
+                                // Если ордер с номером
+                                fillColor = orderColors[orderNumber] || '#FF0000';
+                                strokeColor = '#800000';  // Граница, если есть номер
+                                strokeWidth = 2;
+                                strokeOpacity = 0.8;      // Менее прозрачная граница
+                                fillOpacity = 0.5;        // Полупрозрачная заливка
+                            }
+                            
+                            // Создание полигона
+                            const polygon = new ymaps.Polygon(coordinates, {}, {
+                                fillColor,
+                                strokeColor,
+                                strokeWidth,
+                                strokeOpacity,
+                                fillOpacity,
+                            });
+                            
+                            objectData.polygon = polygon; // Сохранение полигона
+                            
 
                         } catch (e) {
                             //  console.error(`Ошибка при создании полигона для зоны '${zoneKey}':`, e);
