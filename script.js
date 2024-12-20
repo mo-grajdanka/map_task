@@ -560,7 +560,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                                 // Если ордер с номером
                                 fillColor = orderColors[orderNumber] || '#FF0000';
                                 strokeColor = '#800000';  // Граница, если есть номер
-                                strokeWidth = 2;
+                                strokeWidth = 0.3;
                                 strokeOpacity = 0.8;      // Менее прозрачная граница
                                 fillOpacity = 0.5;        // Полупрозрачная заливка
                             }
