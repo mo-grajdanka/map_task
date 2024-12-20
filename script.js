@@ -551,11 +551,19 @@ function fetchZoneData(zoneKey, sheetName, color) {
                           //  const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
                             const orderColor = isNaN(orderNumber) ? '#FF000088' : (orderColors[orderNumber] || '#FF000088');
 
+                            // const polygon = new ymaps.Polygon(coordinates, {}, {
+                            //     fillColor: orderColor,
+                            //     strokeColor: '#333',
+                            //     opacity: 0.7,
+                            // });
+
                             const polygon = new ymaps.Polygon(coordinates, {}, {
-                                fillColor: orderColor,
-                                strokeColor: '#333',
-                                opacity: 0.7,
-                            });
+    fillColor: orderColor,        // Прозрачная заливка 
+    strokeColor: '#FF0000',       // Четкая красная граница
+    strokeWidth: 3,               // Толщина границы 
+    strokeOpacity: 1,             // Полная непрозрачность границы
+    fillOpacity: 0              // Прозрачность заливки
+});
 
                             objectData.polygon = polygon; // Сохраняем полигон в объекте
 
