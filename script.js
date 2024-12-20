@@ -549,7 +549,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                             const orderNumber = parseInt(order, 10);
 
                           //  const orderColor = isNaN(orderNumber) ? color : (orderColors[orderNumber] || color);
-                            const orderColor = isNaN(orderNumber) ? '#FF000088' : (orderColors[orderNumber] || '#FF000088');
+                            const orderColor = isNaN(orderNumber) ? '#FF0000' : (orderColors[orderNumber] || '#FF0000');
 
                             // const polygon = new ymaps.Polygon(coordinates, {}, {
                             //     fillColor: orderColor,
@@ -557,12 +557,12 @@ function fetchZoneData(zoneKey, sheetName, color) {
                             //     opacity: 0.7,
                             // });
 
-                            const polygon = new ymaps.Polygon(coordinates, {}, {
-    fillColor: orderColor,        // Прозрачная заливка 
-    strokeColor: '#FF0000',       // Четкая красная граница
-    strokeWidth: 3,               // Толщина границы 
-    strokeOpacity: 1,             // Полная непрозрачность границы
-    fillOpacity: 0              // Прозрачность заливки
+const polygon = new ymaps.Polygon(coordinates, {}, {
+    fillColor: orderColor,    // Заливка, но её прозрачность будет 0
+    strokeColor: '#FF0000',   // Четкая красная граница
+    strokeWidth: 3,           // Толщина границы 
+    strokeOpacity: 1,         // Полная непрозрачность границы
+    fillOpacity: 0            // Убирает заливку
 });
 
                             objectData.polygon = polygon; // Сохраняем полигон в объекте
