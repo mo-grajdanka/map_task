@@ -720,13 +720,13 @@ function addButtonToOrder(zoneKey, groupName, subgroupName, orderName) {
         });
 
         // Управление видимостью полигона
-        if (zones[zoneKey] && zones[zoneKey].polygon) {
-            if (allElementsVisible) {
-                myMap.geoObjects.add(zones[zoneKey].polygon);
-            } else {
-                myMap.geoObjects.remove(zones[zoneKey].polygon);
-            }
-        }
+        // if (zones[zoneKey] && zones[zoneKey].polygon) {
+        //     if (allElementsVisible) {
+        //         myMap.geoObjects.add(zones[zoneKey].polygon);
+        //     } else {
+        //         myMap.geoObjects.remove(zones[zoneKey].polygon);
+        //     }
+        // }
 
         extraContent.classList.toggle('hidden', !allElementsVisible);
     });
