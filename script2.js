@@ -698,7 +698,7 @@ function addButtonToOrder(zoneKey, groupName, subgroupName, orderName) {
                 label.innerHTML = `
                     <input type="checkbox" 
                            id="object-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}-${sanitizeId(subgroupName)}-${sanitizeId(orderName)}-${sanitizeId(elementId)}"
-                           onchange="toggleObject('${zoneKey}', '${groupName}', '${subgroupName}', '${orderName}', '${elementId}', this.checked)">
+                           onchange="toggleObject('${zoneKey}', '${groupName}', '${subgroupName}', '${'вне ордера'}', '${elementId}', this.checked)">
                     ${title}
                 `;
                 const checkbox = label.querySelector('input[type="checkbox"]');
@@ -716,7 +716,7 @@ function addButtonToOrder(zoneKey, groupName, subgroupName, orderName) {
         checkboxes.forEach((checkbox) => {
             const objectId = checkbox.id.split('-').pop();
             checkbox.checked = allElementsVisible;
-            toggleObject(zoneKey, groupName, subgroupName, orderName, objectId, allElementsVisible);
+            toggleObject(zoneKey, groupName, subgroupName, 'вне ордера', objectId, allElementsVisible);
         });
 
         // Управление видимостью полигона
