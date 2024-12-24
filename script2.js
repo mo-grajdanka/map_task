@@ -1,7 +1,8 @@
 const apiKey = 'AIzaSyAxQtm76Gl2s2Yfv8KX7Zwpj3bfgzKZNkg';
 const spreadsheetId = '13aWpgiOD_uZodKXpxLzkLAgidljTH8UZX3F78czGfwQ';
 
-
+let form1Initialized = false;
+let form2Initialized = false;
 let myMap;
 let zones = {};
 let displayedZones = {};
@@ -481,7 +482,7 @@ function fetchZoneData(zoneKey, sheetName, color) {
                 // Инициализируем группу, если она не существует
                 if (!zones[zoneKey].groups[group]) {
                     zones[zoneKey].groups[group] = { subgroups: {}, orders: {}, objects: [] };
-                    generateGroupHTML(zoneKey, group);
+                    generateGroupHTML(zoneKey, group, link);
                 }
 
 
@@ -750,7 +751,7 @@ function addButtonToOrder(zoneKey, groupName, subgroupName, orderName) {
     });
 
     orderContent.appendChild(button);
-    console.log(`✔️ Кнопка добавлена в ордер: ${orderName}`);
+    // console.log(`✔️ Кнопка добавлена в ордер: ${orderName}`);
 }
 
 
@@ -1166,35 +1167,127 @@ function generateZoneHTML(zoneKey, zoneDisplayName, color) {
 
 
 
+// function generateGroupHTML(zoneKey, groupName, groupLink = null) {
+//     const section = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
+    
+//     if (!section) {
+//         console.warn(`Секция зоны zone-content-${sanitizeId(zoneKey)} не найдена. Создайте её перед добавлением групп.`);
+//         return;
+//     }
+
+//     const groupDiv = document.createElement('div');
+//     groupDiv.className = 'subsection';
+
+//     // Проверяем, если ссылка есть, добавляем протокол, если его нет
+//     if (groupLink && !groupLink.startsWith('http://') && !groupLink.startsWith('https://')) {
+//         console.warn(`Ссылка "${groupLink}" не содержит протокола. Добавляю "https://".`);
+//         groupLink = `https://${groupLink}`;
+//     }
+
+//     // Специальный случай: "Предложения, жалобы" внутри "Доска объявлений"
+//     if (zoneKey === 'Доска объявлений' && groupName === 'Предложения, жалобы') {
+//         groupDiv.innerHTML = `
+//             <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+//                 <span class="category-title">${groupName}</span>
+//             </div>
+//         `;
+
+//         section.appendChild(groupDiv);
+
+//         // Добавляем обработчик клика для заголовка группы
+//         const groupHeader = groupDiv.querySelector(`#group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//         if (groupHeader) {
+//             groupHeader.addEventListener('click', (event) => {
+//                 event.preventDefault(); // Предотвращаем любое стандартное поведение
+
+//                 const modal = document.getElementById('feedback-modal');
+
+//                 if (modal) {
+//                     // Показываем модальное окно
+//                     modal.classList.remove('hidden');
+
+//                     // Инициализация формы, если ещё не была инициализирована
+//                     if (!form2Initialized) {
+//                         form2Initialized = true; 
+//                         initializeExternalForm(formHolder2, 'externalFormStarterCallback2', '1534475'); // Передаём необходимые аргументы
+//                     }
+//                 } else {
+//                     console.error('Модальное окно "feedback-modal" не найдено.');
+//                 }
+//             });
+//         } else {
+//             console.error(`Не удалось найти заголовок группы: group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//         }
+
+//         // Добавляем обработчик для кнопки закрытия модального окна
+//         const closeModalButton = document.getElementById('close-feedback-modal');
+//         if (closeModalButton) {
+//             closeModalButton.addEventListener('click', () => {
+//                 const modal = document.getElementById('feedback-modal');
+//                 if (modal) {
+//                     modal.classList.add('hidden');
+//                 }
+//             });
+//         } else {
+//             console.error('Кнопка закрытия модального окна "close-feedback-modal" не найдена.');
+//         }
+
+//         return; // Прерываем выполнение, чтобы не добавлять стандартное содержимое
+//     }
+
+//     // Если это "Доска объявлений" и есть ссылка, создаём ссылку
+//     if (zoneKey === 'Доска объявлений' && groupLink) {
+//         groupDiv.innerHTML = `
+//             <a href="${groupLink}" target="_blank" class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+//                 ${groupName}
+//             </a>
+//         `;
+
+//         section.appendChild(groupDiv);
+//         return; // Прерываем выполнение, так как нет дополнительного содержимого
+//     }
+
+//     // Для остальных групп создаём стандартный аккордеон
+//     groupDiv.innerHTML = `
+//         <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+//             <span class="category-title">${groupName} (<span id="group-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">0</span>)</span>
+//         </div>
+//         <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}"></div>
+//     `;
+
+//     section.appendChild(groupDiv);
+
+//     // Проверяем существование заголовка
+//     const groupHeader = groupDiv.querySelector(`#group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//     if (!groupHeader) {
+//         console.error(`Не удалось найти заголовок группы: group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//         return;
+//     }
+
+//     // Проверяем существование содержимого только для случаев, где оно создается
+//     let groupContent = null;
+//     if (!(zoneKey === 'Доска объявлений' && groupName === 'Предложения, жалобы')) {
+//         groupContent = document.getElementById(`group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//         if (!groupContent) {
+//             console.error(`Не удалось найти содержимое группы: group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+//             return;
+//         }
+//     }
+
+//     // Добавляем обработчик клика, если есть groupContent
+//     if (groupContent) {
+//         groupHeader.addEventListener('click', () => {
+//             groupContent.classList.toggle('hidden');
+//             const isExpanded = !groupContent.classList.contains('hidden');
+//             console.log(`Группа "${groupName}" в зоне "${zoneKey}" ${isExpanded ? 'открыта' : 'закрыта'}`);
+//             toggleGroupObjects(zoneKey, groupName, isExpanded);
+//         });
+//     }
+// }
 
 
-function generateGroupHTML(zoneKey, groupName) {
-    const section = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
-    if (!document.getElementById(`zone-content-${sanitizeId(zoneKey)}`)) {
-        //   console.warn(`Секция зоны zone-content-${sanitizeId(zoneKey)} не существует. Создайте её перед добавлением групп.`);
 
-    }
 
-    const groupDiv = document.createElement('div');
-    groupDiv.className = 'subsection';
-    groupDiv.innerHTML = `
-        <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
-            <span class="category-title">${groupName} (<span id="group-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">0</span>)</span>
-        </div>
-        <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
-        </div>
-    `;
-    section.appendChild(groupDiv);
-
-    // Установка обработчика для аккордеона
-    const groupHeader = document.getElementById(`group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
-    const groupContent = document.getElementById(`group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
-    groupHeader.addEventListener('click', () => {
-        groupContent.classList.toggle('hidden');
-        const isExpanded = !groupContent.classList.contains('hidden');
-        toggleGroupObjects(zoneKey, groupName, isExpanded);
-    });
-}
 
 
 
@@ -1285,6 +1378,14 @@ function countGroupObjects(zoneKey, groupName) {
 
 
 function generateSubgroupHTML(zoneName, groupName, subgroupName) {
+
+    // console.log('generateSubgroupHTML called with:', {
+    //     zoneName,
+    //     groupName,
+    //     subgroupName
+    // });
+
+
     if (!subgroupName) {
         //    console.warn(`Пропущено создание подгруппы: отсутствует название для группы '${groupName}' в зоне '${zoneName}'`);
         return;
@@ -1428,6 +1529,18 @@ function generateSubgroupHTML(zoneName, groupName, subgroupName) {
 
 
 function generateObjectHTML(zoneName, groupName, subgroupName, orderName, objectId, title) {
+    
+    // console.log('generateObjectHTML called with:', {
+    //     zoneName,
+    //     groupName,
+    //     subgroupName,
+    //     orderName,
+    //     objectId,
+    //     title
+    // });
+
+    
+
     let objectListId;
 
     if (orderName) {
@@ -1750,16 +1863,70 @@ toggleButton.addEventListener('click', () => {
 
 
 
+// Определение функции initializeExternalForm
+function initializeExternalForm(formHolder, callbackName, formId) {
+    if (!formHolder) {
+        console.error(`Элемент formHolder с id=${formHolder ? formHolder.id : 'undefined'} не найден.`);
+        return;
+    }
 
+    // Проверяем, не был ли уже загружен скрипт для этой формы
+    if (formHolder.dataset.scriptLoaded) {
+        console.warn(`Скрипт для формы с id=${formId} уже загружен.`);
+        return;
+    }
+
+    (function () {
+        var f = callbackName,
+            s = document.createElement('script');
+        window[f] = function (h) {
+            if (formHolder) {
+                h.bind(formHolder);
+            } else {
+                console.error(`Элемент ${formHolder.id} не найден`);
+            }
+        };
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = `https://pyrus.com/js/externalformstarter?jsonp=${f}&id=${formId}`;
+        s.onload = function () {
+            formHolder.dataset.scriptLoaded = true;
+            console.log(`Скрипт для формы с id=${formId} успешно загружен.`);
+        };
+        s.onerror = function () {
+            console.error(`Не удалось загрузить скрипт для формы с id=${formId}.`);
+        };
+        document.head.appendChild(s);
+    })();
+}
 
 document.addEventListener("DOMContentLoaded", function () {
-    const formButton = document.getElementById('form-button');
-    const formPopup = document.getElementById('form-popup');
-    const formHolder = document.getElementById('formHolder');
+    // Получаем кнопки для открытия форм
+    const formButton1 = document.getElementById('form-button1');
+    const openFeedbackModalButton = document.getElementById('open-feedback-modal');
+
+    // Получаем модальные окна и элементы внутри них
+    const formPopup1 = document.getElementById('form-popup1');
+    const feedbackModal = document.getElementById('feedback-modal');
+
+    const formHolder1 = document.getElementById('formHolder1');
+    const formHolder2 = document.getElementById('formHolder2');
+
     const imageModal = document.getElementById('image-modal');
     const modalImage = document.getElementById('modal-image');
     const closeImageModalButton = document.getElementById('close-image-modal');
 
+    // Обработчик для закрытия модальных окон формы 1
+    window.closeFormPopup1 = function () {
+        formPopup1.classList.add('hidden');
+    };
+
+    // Обработчик для закрытия модальных окон обратной связи (Форма 2)
+    window.closeFeedbackModal = function () {
+        feedbackModal.classList.add('hidden');
+    };
+
+    // Обработчик для кнопки закрытия image-modal
     if (closeImageModalButton) {
         closeImageModalButton.addEventListener('click', function () {
             imageModal.classList.add('hidden');
@@ -1775,45 +1942,206 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    if (formButton) {
-        formButton.addEventListener('click', function () {
-            formPopup.classList.remove('hidden');
+    // Обработчики для открытия форм
+    if (formButton1) {
+        formButton1.addEventListener('click', function () {
+            formPopup1.classList.remove('hidden');
 
             // Инициализируем форму при первом открытии
-            if (!window.formInitialized) {
-                window.formInitialized = true; // Устанавливаем флаг, чтобы предотвратить повторную инициализацию
-
-                (function () {
-                    var f = 'externalFormStarterCallback', s = document.createElement('script');
-                    window[f] = function (h) {
-                        if (formHolder) {
-                            //    console.log('Форма инициализируется');
-                            h.bind(formHolder);
-                        } else {
-                            //    console.error('formHolder не найден');
-                        }
-                    };
-                    s.type = 'text/javascript';
-                    s.async = true;
-                    s.src = 'https://pyrus.com/js/externalformstarter?jsonp=' + f + '&id=1524907';
-                    document.head.appendChild(s);
-                })();
+            if (!form1Initialized) {
+                form1Initialized = true; // Устанавливаем флаг, чтобы предотвратить повторную инициализацию
+                initializeExternalForm(formHolder1, 'externalFormStarterCallback1', '1524907'); // id=1524907 для Формы 1
             }
         });
     }
 
-    // Закрытие модального окна при клике на крестик
-    window.closeFormPopup = function () {
-        formPopup.classList.add('hidden');
-    };
+    if (openFeedbackModalButton) {
+        openFeedbackModalButton.addEventListener('click', function () {
+            feedbackModal.classList.remove('hidden');
 
-    // Закрытие модального окна при клике вне формы
-    formPopup.addEventListener('click', function (event) {
-        if (event.target === formPopup) {
-            closeFormPopup();
+            // Инициализируем форму при первом открытии
+            if (!form2Initialized) {
+                form2Initialized = true; // Устанавливаем флаг, чтобы предотвратить повторную инициализацию
+                initializeExternalForm(formHolder2, 'externalFormStarterCallback2', '1534475'); // id=1534475 для Формы 2
+            }
+        });
+    }
+
+    // Закрытие модальных окон при клике вне формы
+    formPopup1.addEventListener('click', function (event) {
+        if (event.target === formPopup1) {
+            closeFormPopup1();
         }
     });
+
+    feedbackModal.addEventListener('click', function (event) {
+        if (event.target === feedbackModal) {
+            closeFeedbackModal();
+        }
+    });
+
+    // Дополнительные обработчики или функции можно добавить здесь
 });
+
+// Глобальные переменные для отслеживания инициализации форм
+// let form1Initialized = false;
+// let form2Initialized = false;
+
+// Функция для инициализации внешней формы
+function initializeExternalForm(formHolder, callbackName, formId) {
+    if (!formHolder) {
+        console.error(`Элемент formHolder с id=${formHolder ? formHolder.id : 'undefined'} не найден.`);
+        return;
+    }
+
+    // Проверяем, не был ли уже загружен скрипт для этой формы
+    if (formHolder.dataset.scriptLoaded) {
+        console.warn(`Скрипт для формы с id=${formId} уже загружен.`);
+        return;
+    }
+
+    (function () {
+        var f = callbackName,
+            s = document.createElement('script');
+        window[f] = function (h) {
+            if (formHolder) {
+                h.bind(formHolder);
+            } else {
+                console.error(`Элемент ${formHolder.id} не найден`);
+            }
+        };
+        s.type = 'text/javascript';
+        s.async = true;
+        s.src = `https://pyrus.com/js/externalformstarter?jsonp=${f}&id=${formId}`;
+        s.onload = function () {
+            formHolder.dataset.scriptLoaded = true;
+            console.log(`Скрипт для формы с id=${formId} успешно загружен.`);
+        };
+        s.onerror = function () {
+            console.error(`Не удалось загрузить скрипт для формы с id=${formId}.`);
+        };
+        document.head.appendChild(s);
+    })();
+}
+
+// Функция генерации групп
+function generateGroupHTML(zoneKey, groupName, groupLink = null) {
+    const section = document.getElementById(`zone-content-${sanitizeId(zoneKey)}`);
+    
+    if (!section) {
+        console.warn(`Секция зоны zone-content-${sanitizeId(zoneKey)} не найдена. Создайте её перед добавлением групп.`);
+        return;
+    }
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'subsection';
+
+    // Проверяем, если ссылка есть, добавляем протокол, если его нет
+    if (groupLink && !groupLink.startsWith('http://') && !groupLink.startsWith('https://')) {
+        console.warn(`Ссылка "${groupLink}" не содержит протокола. Добавляю "https://".`);
+        groupLink = `https://${groupLink}`;
+    }
+
+    // Специальный случай: "Предложения, жалобы" внутри "Доска объявлений"
+    if (zoneKey === 'Доска объявлений' && groupName === 'Предложения, жалобы') {
+        groupDiv.innerHTML = `
+            <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+                <span class="category-title">${groupName}</span>
+            </div>
+        `;
+
+        section.appendChild(groupDiv);
+
+        // Добавляем обработчик клика для заголовка группы
+        const groupHeader = groupDiv.querySelector(`#group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+        if (groupHeader) {
+            groupHeader.addEventListener('click', (event) => {
+                event.preventDefault(); // Предотвращаем любое стандартное поведение
+
+                const modal = document.getElementById('feedback-modal');
+
+                if (modal) {
+                    // Показываем модальное окно
+                    modal.classList.remove('hidden');
+
+                    // Инициализация формы, если ещё не была инициализирована
+                    if (!form2Initialized) {
+                        form2Initialized = true; 
+                        initializeExternalForm(formHolder2, 'externalFormStarterCallback2', '1534475'); // Передаём необходимые аргументы
+                    }
+                } else {
+                    console.error('Модальное окно "feedback-modal" не найдено.');
+                }
+            });
+        } else {
+            console.error(`Не удалось найти заголовок группы: group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+        }
+
+        // Добавляем обработчик для кнопки закрытия модального окна
+        const closeModalButton = document.getElementById('close-feedback-modal');
+        if (closeModalButton) {
+            closeModalButton.addEventListener('click', () => {
+                const modal = document.getElementById('feedback-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        } else {
+            console.error('Кнопка закрытия модального окна "close-feedback-modal" не найдена.');
+        }
+
+        return; // Прерываем выполнение, чтобы не добавлять стандартное содержимое
+    }
+
+    // Если это "Доска объявлений" и есть ссылка, создаём ссылку
+    if (zoneKey === 'Доска объявлений' && groupLink) {
+        groupDiv.innerHTML = `
+            <a href="${groupLink}" target="_blank" class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+                ${groupName}
+            </a>
+        `;
+
+        section.appendChild(groupDiv);
+        return; // Прерываем выполнение, так как нет дополнительного содержимого
+    }
+
+    // Для остальных групп создаём стандартный аккордеон
+    groupDiv.innerHTML = `
+        <div class="accordion-header" id="group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">
+            <span class="category-title">${groupName} (<span id="group-count-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}">0</span>)</span>
+        </div>
+        <div class="accordion-content hidden" id="group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}"></div>
+    `;
+
+    section.appendChild(groupDiv);
+
+    // Проверяем существование заголовка
+    const groupHeader = groupDiv.querySelector(`#group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+    if (!groupHeader) {
+        console.error(`Не удалось найти заголовок группы: group-header-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+        return;
+    }
+
+    // Проверяем существование содержимого только для случаев, где оно создается
+    let groupContent = null;
+    if (!(zoneKey === 'Доска объявлений' && groupName === 'Предложения, жалобы')) {
+        groupContent = document.getElementById(`group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+        if (!groupContent) {
+            console.error(`Не удалось найти содержимое группы: group-content-${sanitizeId(zoneKey)}-${sanitizeId(groupName)}`);
+            return;
+        }
+    }
+
+    // Добавляем обработчик клика, если есть groupContent
+    if (groupContent) {
+        groupHeader.addEventListener('click', () => {
+            groupContent.classList.toggle('hidden');
+            const isExpanded = !groupContent.classList.contains('hidden');
+            console.log(`Группа "${groupName}" в зоне "${zoneKey}" ${isExpanded ? 'открыта' : 'закрыта'}`);
+            toggleGroupObjects(zoneKey, groupName, isExpanded);
+        });
+    }
+}
 
 
 // Функция для открытия модального окна с изображением
