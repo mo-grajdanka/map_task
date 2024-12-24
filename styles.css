@@ -545,4 +545,30 @@ margin: 5px 0;
     background-color: #0056b3;
 }
 
+.accordion-header.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
+.object-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.object-link:hover {
+    text-decoration: underline;
+}
+
+
+.accordion-header {
+    display: block; 
+    padding: 10px; 
+    text-decoration: none;
+    color: inherit; 
+    cursor: pointer; 
+}
+
+.accordion-header:hover {
+    text-decoration: underline; 
+}
