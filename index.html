@@ -29,7 +29,7 @@
                         <option value="45">45</option>
                     </select>
                 </div>
-                <button id="form-button" class="button">Форма</button>
+                <button id="form-button1" class="button">Форма</button>
                 <button id="open-photo-modal" class="button">Открыть камеру</button>
             </div>
         </div>
@@ -58,12 +58,12 @@
         </div>
 
         <!-- Модальное окно для формы -->
-        <div id="form-popup" class="form-popup hidden">
+        <!-- <div id="form-popup" class="form-popup hidden">
             <div class="form-popup-content">
                 <span class="popup-close" onclick="closeFormPopup()">&times;</span>
-                <div id="formHolder" data-width="720px"></div>
+                <div id="formHolder1" data-width="720px"></div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Модальное окно для отображения изображения -->
         <div id="image-modal" class="modal hidden">
@@ -84,6 +84,51 @@
                 </div>
             </div>
         </div>
+
+        <!-- <div id="feedback-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-feedback-modal" class="close">&times;</span>
+                <h2>Предложения, жалобы</h2>
+                <div id="feedback-modal-content">
+                    <div id="formHolder2" data-width="720px"></div>
+                   <script type="text/javascript">
+                        (function () {
+                            var f = 'externalFormStarterCallback',
+                                s = document.createElement('script');
+                            window[f] = function (h) {
+                                h.bind(document.getElementById('formHolder2'));
+                            };
+                            s.type = 'text/javascript';
+                            s.async = true;
+                            s.src = 'https://pyrus.com/js/externalformstarter?jsonp=' + f + '&id=1534475';
+                            document.head.appendChild(s);
+                        })();
+                    </script> 
+                </div>
+            </div>
+        </div>  -->
+
+        <!-- Модальное окно для первой формы -->
+        <div id="form-popup1" class="form-popup hidden">
+            <div class="form-popup-content">
+                <span class="popup-close" onclick="closeFormPopup1()">&times;</span>
+                <div id="formHolder1" data-width="720px"></div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для обратной связи (вторая форма) -->
+        <div id="feedback-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-feedback-modal" class="close">&times;</span>
+                <h2>Предложения, жалобы</h2>
+                <div id="feedback-modal-content">
+                    <div id="formHolder2" data-width="720px"></div>
+                </div>
+            </div>
+        </div> 
+
+        
+        
 
         <!-- Карта -->
         <div id="map"></div>
