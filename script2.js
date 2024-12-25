@@ -1612,7 +1612,6 @@ function updateGroupCounts(zoneKey) {
             groupCountElement.textContent = groupCount;
         }
 
-        // **Добавьте сортировку подгрупп здесь**
         // Получаем массив подгрупп с их именами и количеством
         const sortedSubgroups = Object.keys(group.subgroups).sort((a, b) => {
             const countA = group.subgroups[a].objects.length + Object.keys(group.subgroups[a].orders).reduce((acc, order) => acc + group.subgroups[a].orders[order].length, 0);
@@ -1976,7 +1975,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Дополнительные обработчики или функции можно добавить здесь
+    
 });
 
 // Глобальные переменные для отслеживания инициализации форм
